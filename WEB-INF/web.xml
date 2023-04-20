@@ -4,6 +4,7 @@
            xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
 		  http://java.sun.com/xml/ns/javaee/web-app_3_1.xsd"
            version="3.1">
+
 <!--
     <servlet>
         <servlet-name>HelloWorld</servlet-name>
@@ -26,7 +27,7 @@
         <url-pattern>/Home</url-pattern>
     </servlet-mapping>
     <resource-ref>
-        <description>Test DB</description>
+        <description>>DB Connection</description>
         <res-ref-name>jdbc/TestDB</res-ref-name>
         <res-type>javax.sql.DataSource</res-type>
         <res-auth>Container</res-auth>
