@@ -26,7 +26,7 @@ public class DatabaseConnection {
         }
     }
 
-    public static Connection getConnection() {
+    public static synchronized Connection getConnection() {
         if (instance == null) {
             instance = new DatabaseConnection();
         }
