@@ -1,6 +1,6 @@
 package backend;
 
-import backend.database.DatabaseConnection;
+import database.DatabaseConnection;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -10,7 +10,7 @@ public class AuthenticatorClass implements Authenticator{
 
     private Connection connection;
     public AuthenticatorClass() {
-        this.connection = DatabaseConnection.getInstance();
+        this.connection = DatabaseConnection.getConnection();
     }
     @Override
     public void create_account(String username, String password, String pwd2) {
