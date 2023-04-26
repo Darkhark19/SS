@@ -1,17 +1,14 @@
 package authenticator;
 
-import database.DatabaseDAO;
+import database.DatabaseOperator;
 import models.Account;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 public class AuthenticatorClass implements Authenticator {
 
-    private final DatabaseDAO db;
+    private final DatabaseOperator db;
 
     public AuthenticatorClass() {
-        this.db = new DatabaseDAO();
+        this.db = new DatabaseOperator();
     }
 
     @Override

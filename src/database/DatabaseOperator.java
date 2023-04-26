@@ -8,10 +8,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class DatabaseDAO {
+public class DatabaseOperator {
     Connection connection;
 
-    public DatabaseDAO() {
+    public DatabaseOperator() {
         this.connection = DatabaseManager.getInstance().getConnection();
     }
 
