@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 
-@WebServlet("/Test")
+@WebServlet("/private/Test")
 public class TestingServlet extends HttpServlet {
 
     static int counter = 0;
