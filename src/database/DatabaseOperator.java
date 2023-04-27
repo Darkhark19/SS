@@ -31,18 +31,18 @@ public class DatabaseOperator {
         pstmt.setString(1, name);
         int result = pstmt.executeUpdate();
         if (result == 0) {
-            throw new AccountNotFountException("Account not found");
+            throw new AccountNotFountException();
         }
 
     }
 
-    public Account getAccount(String name) throws SQLException, AccountNotFountException {
+    public Account getAccount(String name) throws SQLException {
         String sql = "SELECT * FROM accounts WHERE name=?";
         PreparedStatement pstmt = connection.prepareStatement(sql);
         pstmt.setString(1, name);
         ResultSet rs = pstmt.executeQuery();
         if (!rs.next()) {
-            throw new AccountNotFountException("Account not found");
+            return null;
         }
         return DatabaseMapper.mapToAccount(rs);
 
@@ -56,7 +56,7 @@ public class DatabaseOperator {
         pstmt.setString(2, name);
         int result = pstmt.executeUpdate();
         if (result == 0) {
-            throw new AccountNotFountException("Account not found");
+            throw new AccountNotFountException();
         }
     }
 

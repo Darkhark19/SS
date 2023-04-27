@@ -39,7 +39,7 @@ public class DatabaseManager {
 
     public static void main(String[] args) throws SQLException {
         Connection conn = DatabaseManager.getInstance().getConnection();
-        ResultSet rs = conn.createStatement().executeQuery("SELECT * FROM users");
+        ResultSet rs = conn.createStatement().executeQuery("SELECT * FROM test");
         while (rs.next()) {
             System.out.println(rs.getString("health"));
         }

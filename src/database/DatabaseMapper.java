@@ -10,7 +10,7 @@ public class DatabaseMapper {
         return new Account(
                 rs.getString("name"),
                 "PASSWORD",
-                rs.getBoolean("loggedIn"),
+                rs.getBoolean("logged_in"),
                 rs.getBoolean("locked")
         );
     }
