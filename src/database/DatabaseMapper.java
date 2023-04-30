@@ -7,7 +7,7 @@ import java.sql.SQLException;
 
 public class DatabaseMapper {
     public static Account mapToAccount(ResultSet rs) throws SQLException {
-        return new Account(
+        return new AccountClass(
                 rs.getString("name"),
                 "PASSWORD",
                 rs.getBoolean("logged_in"),

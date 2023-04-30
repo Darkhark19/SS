@@ -2,6 +2,7 @@ package resources;
 
 import authenticator.Authenticator;
 import authenticator.AuthenticatorClass;
+import authenticator.utils.PasswordUtils;
 import database.exceptions.AccountNotFountException;
 import database.exceptions.NameAlreadyExists;
 import models.Account;
@@ -12,8 +13,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-@WebServlet("/account")
-public class AccountServlet extends HttpServlet {
+@WebServlet("/users")
+public class ManageUsersServlet extends HttpServlet {
 
     private Authenticator authenticator;
     @Override
@@ -31,8 +32,8 @@ public class AccountServlet extends HttpServlet {
     public void doPost(HttpServletRequest request,
                        HttpServletResponse response) {
         String name = request.getParameter("name");
-        String pwd1 = request.getParameter("pwd1");
-        String pwd2 = request.getParameter("pwd2");
+        String pwd1 = PasswordUtils.hashPassword(request.getParameter("pwd1"));
+        String pwd2 = PasswordUtils.hashPassword(request.getParameter("pwd2"));
         try {
             authenticator.createAccount(name, pwd1, pwd2);
             response.setStatus(HttpServletResponse.SC_CREATED);

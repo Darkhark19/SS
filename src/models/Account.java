@@ -1,38 +1,15 @@
 package models;
 
-public class Account{
-    private String username;
-    private String password;
-    private boolean loggedIn;
-    private boolean locked;
+import java.util.List;
 
-    public Account (String username, String password){
-        this.username = username;
-        this.password = password;
-        this.loggedIn = false;
-        this.locked = false;
-    }
+public interface Account {
 
-    public Account (String username, String password, boolean loggedIn, boolean locked){
-        this.username = username;
-        this.password = password;
-        this.loggedIn = loggedIn;
-        this.locked = locked;
-    }
+    List<String> getRoles();
+    String getUsername();
 
-    public String getUsername(){
-        return this.username;
-    }
+    String getPassword();
 
-    public String getPassword(){
-        return this.password;
-    }
+    boolean isLoggedIn();
 
-    public boolean isLoggedIn(){
-        return this.loggedIn;
-    }
-
-    public boolean isLocked(){
-        return this.locked;
-    }
+    boolean isLocked();
 }

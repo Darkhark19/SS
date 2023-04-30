@@ -4,6 +4,9 @@ import database.exceptions.AccountNotFountException;
 import database.exceptions.NameAlreadyExists;
 import models.Account;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 public interface Authenticator {
 
     void createAccount(String name, String pwd1, String pwd2) throws NameAlreadyExists;
@@ -17,4 +20,7 @@ public interface Authenticator {
     Account login(String name, String pwd);
 
     void logout(Account acc);
+
+    Account login(HttpServletRequest req, HttpServletResponse resp);
+
 }
