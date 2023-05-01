@@ -7,6 +7,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.LinkedList;
 import java.util.List;
 
 public class DatabaseOperator {
@@ -24,6 +25,11 @@ public class DatabaseOperator {
         pstmt.setString(1, name);
         pstmt.setString(2, hashedPwd);
         pstmt.executeUpdate();
+        //Create default role
+        List<String> roles = new LinkedList<>();
+        roles.add("user");
+        roles.add("tomcat");
+        this.addRoles(name, roles);
     }
 
     public void deleteAccount(String name) throws SQLException, AccountNotFountException {
@@ -69,6 +75,16 @@ public class DatabaseOperator {
             throw new AccountNotFountException();
         }
     }
+    public void logoutAccount(String name) throws SQLException, AccountNotFountException {
+        String sql = "UPDATE accounts SET logged_in=? WHERE name=?";
+        PreparedStatement pstmt = connection.prepareStatement(sql);
+        pstmt.setBoolean(1, false);
+        pstmt.setString(2, name);
+        int result = pstmt.executeUpdate();
+        if (result == 0) {
+            throw new AccountNotFountException();
+        }
+    }
 
     public void addRoles(String username, List<String> roles) throws SQLException {
         String sql = "INSERT INTO roles(username,role) VALUES(?,?)";
@@ -88,9 +104,18 @@ public class DatabaseOperator {
         if (!rs.next()) {
             return null;
         }
-        return DatabaseMapper.mapToAccount(rs);
-
+        Account user = DatabaseMapper.mapToAccount(rs);
+        sql = "SELECT * FROM roles WHERE username=?";
+        pstmt = connection.prepareStatement(sql);
+        pstmt.setString(1, name);
+        rs = pstmt.executeQuery();
+        while (rs.next()) {
+            user.addRole(rs.getString("role"));
+        }
+        return user;
     }
+
+
 
     public void changePwd(String name, String newHashedPwd) throws SQLException, AccountNotFountException {
         String sql = "UPDATE accounts SET password=? WHERE name=?";

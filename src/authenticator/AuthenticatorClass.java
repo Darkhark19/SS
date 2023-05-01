@@ -1,9 +1,9 @@
 package authenticator;
 
+import authenticator.utils.JWTUtils;
 import authenticator.utils.PasswordUtils;
 import database.DatabaseOperator;
-import database.exceptions.AccountNotFountException;
-import database.exceptions.NameAlreadyExists;
+import database.exceptions.*;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
@@ -20,7 +20,6 @@ import java.util.Date;
 public class AuthenticatorClass implements Authenticator {
 
 
-    private static final int VALIDITY = 1000 * 60 * 10;
     private final DatabaseOperator db;
 
     public AuthenticatorClass() {
@@ -62,7 +61,7 @@ public class AuthenticatorClass implements Authenticator {
             Account account = db.getAccount(username);
             if (account == null)
                 throw new AccountNotFountException();
-            return account;
+            return account.clone();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -74,17 +73,45 @@ public class AuthenticatorClass implements Authenticator {
     }
 
     @Override
-    public Account login(String name, String pwd) {
-        return null;
+    public Account login(String name, String pwd)
+            throws UndefinedAccount, LockedAccount,
+            AuthenticationError, AccountNotFountException {
+        try {
+            Account account = db.getAccount(name);
+            if (account == null) {
+                throw new UndefinedAccount();
+            } else if (account.isLocked()) {
+                throw new LockedAccount();
+            } else if (!account.getPassword().equals(pwd)) {
+                throw new AuthenticationError();
+            } else {
+                account.setLoggedIn(true);
+                db.loginAccount(name);
+                return account;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+
+        }
     }
 
     @Override
     public void logout(Account acc) {
+        try {
+            acc.setLoggedIn(false);
+            db.logoutAccount(acc.getUsername());
+        } catch (SQLException | AccountNotFountException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public Account login(HttpServletRequest req, HttpServletResponse resp) {
-        return null;
+    }
+
+    @Override
+    public String createToken(Account acc) {
+        JWTUtils.createJWT(acc.getUsername(), "authenticator", "authenticator", 100000);
     }
 
     // check if account with given name exists
@@ -99,27 +126,6 @@ public class AuthenticatorClass implements Authenticator {
         }
         return false;
     }
-    private String createJWT(String id, String issuer, String subject) {
-        //The JWT signature algorithm used to sign the token
-        SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
-        //sign JWT with ApiKey secret
-        byte[] apiKeySecretBytes =PasswordUtils.getPassphraseEncoded();
-        Key signingKey = new SecretKeySpec(apiKeySecretBytes, signatureAlgorithm.getJcaName());
-        //Set the JWT Claims
-        JwtBuilder builder = Jwts.builder().setId(id).setSubject(subject).setIssuer(issuer)
-                .setExpiration(new Date(System.currentTimeMillis() + VALIDITY))
-                .signWith(signatureAlgorithm, signingKey);
-        //Builds the JWT and serializes it to a compact, URL-safe string
-        return builder.compact();
-    }
 
-    private void parseJWT(String jwt) {
-        Claims claims = Jwts.parser()
-                .setSigningKey(PasswordUtils.getPassphraseEncoded())
-                .parseClaimsJws(jwt).getBody();
-        System.out.println("ID: " + claims.getId());
-        System.out.println("Subject: " + claims.getSubject());
-        System.out.println("Issuer: " + claims.getIssuer());
-    }
 
 }
