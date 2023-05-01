@@ -1,73 +1,53 @@
 package models;
 
-import java.util.LinkedList;
-import java.util.List;
+import authenticator.utils.JWTUtils;
 
 public class AccountClass implements Account, Cloneable {
-    private String username;
-    private String password;
+    private final String username;
+    private final String password;
     private boolean loggedIn;
     private boolean locked;
-    private List<String> roles;
-    private String token;
-
-    @Override
-    public String getToken() {
-        return token;
-    }
-
-    public void createToken() {
-    }
-
-
-    public AccountClass(String username, String password) {
-        this.username = username;
-        this.password = password;
-        this.loggedIn = false;
-        this.locked = false;
-        roles = new LinkedList<>();
-    }
 
     public AccountClass(String username, String password, boolean loggedIn, boolean locked) {
         this.username = username;
         this.password = password;
         this.loggedIn = loggedIn;
         this.locked = locked;
-        roles = new LinkedList<>();
     }
 
-    public void addRole(String role) {
-        this.roles.add(role);
-    }
-
-    public List<String> getRoles() {
-        return roles;
-    }
-
+    @Override
     public String getUsername() {
         return this.username;
     }
 
+    @Override
     public String getPassword() {
         return this.password;
     }
 
+    @Override
     public boolean isLoggedIn() {
         return this.loggedIn;
     }
 
+    @Override
     public boolean isLocked() {
         return this.locked;
     }
 
     @Override
-    public void setLoggedIn(boolean loggedIn) {
-        this.loggedIn = loggedIn;
+    public void setLoggedIn(boolean b) {
+        this.loggedIn = b;
     }
 
     @Override
-    public void setLocked(boolean locked) {
-        this.locked = locked;
+    public void setLocked(boolean b) {
+        this.locked = b;
+    }
+
+    @Override
+    public String getJWT() {
+        return JWTUtils.createJWT(this.username);
     }
 
     @Override

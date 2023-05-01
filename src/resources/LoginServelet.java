@@ -2,23 +2,22 @@ package resources;
 
 import authenticator.Authenticator;
 import authenticator.AuthenticatorClass;
-import authenticator.utils.PasswordUtils;
 import database.exceptions.AccountNotFountException;
 import database.exceptions.AuthenticationError;
-import database.exceptions.LockedAccount;
+import database.exceptions.LockedAccountException;
 import database.exceptions.UndefinedAccount;
 import models.Account;
 
+import javax.security.auth.login.AccountLockedException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
+import java.io.IOException;
 
 @WebServlet("/login")
 public class LoginServelet extends HttpServlet {
 
     private Authenticator authenticator;
-    private static final String USER ="user";
-    private static final String PWD ="pwd";
     private static final String JWT ="jwt";
     @Override
     public void init() throws ServletException {
@@ -39,46 +38,11 @@ public class LoginServelet extends HttpServlet {
     @Override
     public void doPost(HttpServletRequest request,
                        HttpServletResponse response) {
-
-    }
-
-    /**
-     * Delete an account.
-     * @param request The request object.
-     * @param response The response object.
-     */
-    @Override
-    public void doDelete(HttpServletRequest request,
-                         HttpServletResponse response) {
         String name = request.getParameter("name");
-        String pwd1 = request.getParameter("pwd1");
-        String pwd2 = request.getParameter("pwd2");
+        String pwd = request.getParameter("password");
         try {
-            authenticator.deleteAccount(name);
-            response.setStatus(HttpServletResponse.SC_OK);
-        }
-        catch (AccountNotFountException e) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-        }
-        catch (RuntimeException e) {
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-        }
-    }
-
-    /**
-     * Get credencials to login
-     * @param request The request object.
-     * @param response The response object.
-     */
-    @Override
-    public void doGet(HttpServletRequest request,
-                      HttpServletResponse response) {
-        String name = request.getParameter("name");
-        String pwd1 = PasswordUtils.hashPassword(request.getParameter("password"));
-        try {
-            Account authUser = authenticator.login(name, pwd1);
+            Account authUser = authenticator.authenticate_user(name, pwd);
             HttpSession session = request.getSession(true);
-            pwd1 = null;
             session.setAttribute(JWT, authUser.getJWT());
             //compute token(s); send token(s) in next reply (cookie)
             //continue with authenticated user (redirect?)
@@ -87,17 +51,20 @@ public class LoginServelet extends HttpServlet {
             response.addCookie(cookie);
             response.sendRedirect("/mainPage.html");
         }
-        catch (RuntimeException e) {
+        catch (AccountNotFountException e) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        }
+        catch (LockedAccountException | AccountLockedException e) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        }
+        catch (UndefinedAccount e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        } catch (UndefinedAccount e) {
-            throw new RuntimeException(e);
-        } catch (AuthenticationError e) {
-            // handle authentication error
-            System.out.println(e.getMessage());
-        } catch (LockedAccount e) {
-            System.out.println(e.getMessage());
-        } catch (AccountNotFountException e) {
-            System.out.println(e.getMessage());
+        }
+        catch (AuthenticationError e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        }
+        catch (IOException e) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
 }

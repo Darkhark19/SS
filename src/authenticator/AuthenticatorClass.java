@@ -1,21 +1,14 @@
 package authenticator;
 
-import authenticator.utils.JWTUtils;
+
 import authenticator.utils.PasswordUtils;
 import database.DatabaseOperator;
 import database.exceptions.*;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtBuilder;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import models.Account;
 
-import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.security.Key;
 import java.sql.SQLException;
-import java.util.Date;
 
 public class AuthenticatorClass implements Authenticator {
 
@@ -73,20 +66,18 @@ public class AuthenticatorClass implements Authenticator {
     }
 
     @Override
-    public Account login(String name, String pwd)
-            throws UndefinedAccount, LockedAccount,
-            AuthenticationError, AccountNotFountException {
+    public Account authenticate_user(String name, String pwd) throws AccountNotFountException, LockedAccountException, UndefinedAccount, AuthenticationError {
         try {
             Account account = db.getAccount(name);
             if (account == null) {
                 throw new UndefinedAccount();
             } else if (account.isLocked()) {
-                throw new LockedAccount();
-            } else if (!account.getPassword().equals(pwd)) {
+                throw new LockedAccountException();
+            } else if (!account.getPassword().equals(PasswordUtils.hashPassword(pwd))) {
                 throw new AuthenticationError();
             } else {
                 account.setLoggedIn(true);
-                db.loginAccount(name);
+                db.setLoggedIn(name, true);
                 return account;
             }
         } catch (SQLException e) {
@@ -106,13 +97,10 @@ public class AuthenticatorClass implements Authenticator {
     }
 
     @Override
-    public Account login(HttpServletRequest req, HttpServletResponse resp) {
+    public Account check_authenticated_request(HttpServletRequest request, HttpServletResponse response) {
+        return null;
     }
 
-    @Override
-    public String createToken(Account acc) {
-        JWTUtils.createJWT(acc.getUsername(), "authenticator", "authenticator", 100000);
-    }
 
     // check if account with given name exists
     public boolean accountExists(String name) {

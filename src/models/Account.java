@@ -1,11 +1,6 @@
 package models;
 
-import java.util.List;
-
 public interface Account {
-
-    void addRole(String role);
-    List<String> getRoles();
     String getUsername();
 
     String getPassword();
@@ -14,13 +9,10 @@ public interface Account {
 
     boolean isLocked();
 
-    void setLoggedIn(boolean loggedIn);
+    String getJWT();
+    void setLoggedIn(boolean b);
 
-    void setLocked(boolean locked);
-
-    void createToken();
-
-    String getToken();
+    void setLocked(boolean b);
 
     Account clone();
 }

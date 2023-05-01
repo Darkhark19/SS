@@ -3,6 +3,7 @@ package authenticator;
 import database.exceptions.*;
 import models.Account;
 
+import javax.security.auth.login.AccountLockedException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -16,12 +17,9 @@ public interface Authenticator {
 
     void changePwd(String name, String pwd1, String pwd2);
 
-    Account login(String name, String pwd) throws UndefinedAccount, AuthenticationError, LockedAccount, AccountNotFountException;
-
+    Account authenticate_user(String name, String pwd) throws AccountNotFountException, AccountLockedException, LockedAccountException, UndefinedAccount, AuthenticationError;
     void logout(Account acc);
 
-    Account login(HttpServletRequest req, HttpServletResponse resp);
-
-    String createToken(Account acc);
+    Account check_authenticated_request(HttpServletRequest request, HttpServletResponse response);
 
 }

@@ -7,8 +7,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.LinkedList;
-import java.util.List;
 
 public class DatabaseOperator {
     Connection connection;
@@ -25,11 +23,6 @@ public class DatabaseOperator {
         pstmt.setString(1, name);
         pstmt.setString(2, hashedPwd);
         pstmt.executeUpdate();
-        //Create default role
-        List<String> roles = new LinkedList<>();
-        roles.add("user");
-        roles.add("tomcat");
-        this.addRoles(name, roles);
     }
 
     public void deleteAccount(String name) throws SQLException, AccountNotFountException {
@@ -43,10 +36,10 @@ public class DatabaseOperator {
 
     }
 
-    public void lockAccount(String name) throws SQLException, AccountNotFountException {
+    public void setLock(String name, boolean lock) throws SQLException, AccountNotFountException {
         String sql = "UPDATE accounts SET locked=? WHERE name=?";
         PreparedStatement pstmt = connection.prepareStatement(sql);
-        pstmt.setBoolean(1, true);
+        pstmt.setBoolean(1, lock);
         pstmt.setString(2, name);
         int result = pstmt.executeUpdate();
         if (result == 0) {
@@ -54,21 +47,10 @@ public class DatabaseOperator {
         }
     }
 
-    public void unlockAccount(String name) throws SQLException, AccountNotFountException {
-        String sql = "UPDATE accounts SET locked=? WHERE name=?";
-        PreparedStatement pstmt = connection.prepareStatement(sql);
-        pstmt.setBoolean(1, false);
-        pstmt.setString(2, name);
-        int result = pstmt.executeUpdate();
-        if (result == 0) {
-            throw new AccountNotFountException();
-        }
-    }
-
-    public void loginAccount(String name) throws SQLException, AccountNotFountException {
+    public void setLoggedIn(String name, boolean loggedIn) throws SQLException, AccountNotFountException {
         String sql = "UPDATE accounts SET logged_in=? WHERE name=?";
         PreparedStatement pstmt = connection.prepareStatement(sql);
-        pstmt.setBoolean(1, true);
+        pstmt.setBoolean(1, loggedIn);
         pstmt.setString(2, name);
         int result = pstmt.executeUpdate();
         if (result == 0) {
@@ -86,16 +68,6 @@ public class DatabaseOperator {
         }
     }
 
-    public void addRoles(String username, List<String> roles) throws SQLException {
-        String sql = "INSERT INTO roles(username,role) VALUES(?,?)";
-        PreparedStatement pstmt = connection.prepareStatement(sql);
-        pstmt.setString(1, username);
-        for (String role : roles) {
-            pstmt.setString(2, role);
-            pstmt.executeUpdate();
-        }
-    }
-
     public Account getAccount(String name) throws SQLException {
         String sql = "SELECT * FROM accounts WHERE name=?";
         PreparedStatement pstmt = connection.prepareStatement(sql);
@@ -104,15 +76,7 @@ public class DatabaseOperator {
         if (!rs.next()) {
             return null;
         }
-        Account user = DatabaseMapper.mapToAccount(rs);
-        sql = "SELECT * FROM roles WHERE username=?";
-        pstmt = connection.prepareStatement(sql);
-        pstmt.setString(1, name);
-        rs = pstmt.executeQuery();
-        while (rs.next()) {
-            user.addRole(rs.getString("role"));
-        }
-        return user;
+        return DatabaseMapper.mapToAccount(rs);
     }
 
 
@@ -127,10 +91,6 @@ public class DatabaseOperator {
         if (result == 0) {
             throw new AccountNotFountException();
         }
-    }
-
-    public void closeConnection() throws SQLException {
-        connection.close();
     }
 }
 
