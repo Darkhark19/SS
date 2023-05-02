@@ -76,8 +76,9 @@ public class AuthenticatorClass implements Authenticator {
             } else if (!account.getPassword().equals(PasswordUtils.hashPassword(pwd))) {
                 throw new AuthenticationError();
             } else {
-                account.setLoggedIn(true);
                 db.setLoggedIn(name, true);
+                account.setLoggedIn(true);
+                account.clearPassword();
                 return account;
             }
         } catch (SQLException e) {

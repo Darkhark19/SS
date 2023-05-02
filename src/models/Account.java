@@ -14,5 +14,7 @@ public interface Account {
 
     void setLocked(boolean b);
 
+    void clearPassword();
+
     Account clone();
 }

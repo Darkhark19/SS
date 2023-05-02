@@ -4,7 +4,7 @@ import authenticator.utils.JWTUtils;
 
 public class AccountClass implements Account, Cloneable {
     private final String username;
-    private final String password;
+    private String password;
     private boolean loggedIn;
     private boolean locked;
 
@@ -43,6 +43,11 @@ public class AccountClass implements Account, Cloneable {
     @Override
     public void setLocked(boolean b) {
         this.locked = b;
+    }
+
+    @Override
+    public void clearPassword() {
+        this.password = null;
     }
 
     @Override

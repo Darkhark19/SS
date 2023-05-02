@@ -11,7 +11,7 @@ import java.util.Date;
 
 public class JWTUtils {
 
-    private static final String PASSPHRASE = "p54xoyMev6MH3jJuf85HjuXMB401tUqV9PoF048u";
+    private static final String PASSPHRASE = "322ffdcd16d50546568368e50a10110c7320448b3d59b23d27f1fd14e881d9f6";
     private static final String ISSUER = "authenticator-project.fct.unl.pt";
     private static final int VALIDITY = 1000 * 60 * 10 ; // 10 minutes in milliseconds
     private static final SignatureAlgorithm SIGNATURE_ALGORITHM = SignatureAlgorithm.HS256;

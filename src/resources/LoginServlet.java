@@ -15,7 +15,7 @@ import javax.servlet.http.*;
 import java.io.IOException;
 
 @WebServlet("/login")
-public class LoginServelet extends HttpServlet {
+public class LoginServlet extends HttpServlet {
 
     private Authenticator authenticator;
     private static final String JWT ="jwt";
@@ -49,16 +49,14 @@ public class LoginServelet extends HttpServlet {
             Cookie cookie = new Cookie(JWT, name);
             cookie.setMaxAge(10);
             response.addCookie(cookie);
-            response.sendRedirect("/mainPage.html");
+            response.sendRedirect("mainPage.html");
+            response.setStatus(HttpServletResponse.SC_OK);
         }
-        catch (AccountNotFountException e) {
+        catch (AccountNotFountException | UndefinedAccount e) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
         }
         catch (LockedAccountException | AccountLockedException e) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-        }
-        catch (UndefinedAccount e) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         }
         catch (AuthenticationError e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

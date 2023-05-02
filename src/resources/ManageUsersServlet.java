@@ -57,6 +57,7 @@ public class ManageUsersServlet extends HttpServlet {
         String pwd1 = request.getParameter("pwd1");
         String pwd2 = request.getParameter("pwd2");
         try {
+            authenticator.check_authenticated_request(request, response);
             authenticator.deleteAccount(name);
             response.setStatus(HttpServletResponse.SC_OK);
         }
