@@ -23,10 +23,4 @@ public class PasswordUtils {
         return hashPassword(password).equals(hashedPassword);
     }
 
-    public static void main(String[] args) {
-        String password = "mypassword";
-        String hashedPassword = hashPassword(password);
-        System.out.println("Original password: " + password);
-        System.out.println("Hashed password: " + hashedPassword);
-    }
 }

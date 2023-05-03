@@ -20,6 +20,6 @@ public interface Authenticator {
     Account authenticate_user(String name, String pwd) throws AccountNotFountException, AccountLockedException, LockedAccountException, UndefinedAccount, AuthenticationError;
     void logout(Account acc);
 
-    Account check_authenticated_request(HttpServletRequest request, HttpServletResponse response);
+    Account check_authenticated_request(HttpServletRequest request, HttpServletResponse response) throws AuthenticationError;
 
 }

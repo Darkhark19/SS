@@ -8,19 +8,26 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 public class JWTUtils {
 
     private static final String PASSPHRASE = "322ffdcd16d50546568368e50a10110c7320448b3d59b23d27f1fd14e881d9f6";
     private static final String ISSUER = "authenticator-project.fct.unl.pt";
+    public static final String SUBJECT = "JSON Web Token for SegSoft 2022/2023";
     private static final int VALIDITY = 1000 * 60 * 10 ; // 10 minutes in milliseconds
     private static final SignatureAlgorithm SIGNATURE_ALGORITHM = SignatureAlgorithm.HS256;
 
+    public static final String JWT ="jwt";
     public static String createJWT(String username) {
+        Map<String,String> claims = new HashMap<>();
+        claims.put("username", username);
         return Jwts.builder()
-                .setSubject(username)
+                .setSubject(SUBJECT)
                 .setIssuer(ISSUER)
                 .setIssuedAt(new Date())
+                .setClaims(claims)
                 .setExpiration(new Date(System.currentTimeMillis() + VALIDITY))
                 .signWith(new SecretKeySpec(getPassphraseEncoded(), SIGNATURE_ALGORITHM.getJcaName()), SIGNATURE_ALGORITHM)
                 .compact();
@@ -38,7 +45,12 @@ public class JWTUtils {
                     .setSigningKey(getPassphraseEncoded())
                     .build()
                     .parseClaimsJws(jwt).getBody();
-            return claims.getSubject();  // returns the username
+            if(claims.getExpiration() == null || claims.getExpiration().before(new Date()))
+                throw new JwtException("Expired JWT token");
+            else if(!claims.getIssuer().equals(ISSUER))
+                throw new JwtException("Invalid JWT issuer");
+            else
+                return claims.get("username").toString();  // returns the username
         }
         catch (JwtException e) {
             return null;   // invalid token or expired

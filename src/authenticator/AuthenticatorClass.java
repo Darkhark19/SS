@@ -1,14 +1,18 @@
 package authenticator;
 
 
+import authenticator.utils.JWTUtils;
 import authenticator.utils.PasswordUtils;
 import database.DatabaseOperator;
 import database.exceptions.*;
 import models.Account;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.sql.SQLException;
+import java.util.Objects;
 
 public class AuthenticatorClass implements Authenticator {
 
@@ -98,8 +102,23 @@ public class AuthenticatorClass implements Authenticator {
     }
 
     @Override
-    public Account check_authenticated_request(HttpServletRequest request, HttpServletResponse response) {
-        return null;
+    public Account check_authenticated_request(HttpServletRequest request, HttpServletResponse response) throws AuthenticationError {
+        // check tokens in session against session info
+        // refresh token (optional)
+        // if not OK then raise AuthenticationError
+        HttpSession session = request.getSession();
+        String JWTToken = JWTUtils.parseJWT(session.getAttribute(JWTUtils.JWT).toString());
+        System.out.println(JWTToken);
+        String userCookie = request.getCookies()[0].getValue();
+        System.out.println(userCookie);
+        String userToken = JWTUtils.parseJWT(userCookie);
+        System.out.println(userToken);
+        if(Objects.equals(JWTToken, userToken)){
+            Cookie cookie = new Cookie(JWTUtils.JWT, JWTUtils.createJWT(userToken));
+            cookie.setMaxAge(10);
+            response.addCookie(cookie);
+        }
+        throw new AuthenticationError();
     }
 
 

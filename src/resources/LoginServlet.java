@@ -2,6 +2,7 @@ package resources;
 
 import authenticator.Authenticator;
 import authenticator.AuthenticatorClass;
+import authenticator.utils.JWTUtils;
 import database.exceptions.AccountNotFountException;
 import database.exceptions.AuthenticationError;
 import database.exceptions.LockedAccountException;
@@ -18,7 +19,6 @@ import java.io.IOException;
 public class LoginServlet extends HttpServlet {
 
     private Authenticator authenticator;
-    private static final String JWT ="jwt";
     @Override
     public void init() throws ServletException {
         this.authenticator = new AuthenticatorClass();
@@ -43,10 +43,11 @@ public class LoginServlet extends HttpServlet {
         try {
             Account authUser = authenticator.authenticate_user(name, pwd);
             HttpSession session = request.getSession(true);
-            session.setAttribute(JWT, authUser.getJWT());
+            String token = authUser.getJWT();
+            session.setAttribute(JWTUtils.JWT, token);
             //compute token(s); send token(s) in next reply (cookie)
             //continue with authenticated user (redirect?)
-            Cookie cookie = new Cookie(JWT, name);
+            Cookie cookie = new Cookie(JWTUtils.JWT, token);
             cookie.setMaxAge(10);
             response.addCookie(cookie);
             response.sendRedirect("mainPage.html");
@@ -63,6 +64,20 @@ public class LoginServlet extends HttpServlet {
         }
         catch (IOException e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public void doGet(HttpServletRequest request,
+                      HttpServletResponse response) {
+        try {
+            Account user = authenticator.check_authenticated_request(request, response);
+            authenticator.logout(user);
+            HttpSession session = request.getSession(false);
+            if (session != null ) session.invalidate();
+            response.setStatus(HttpServletResponse.SC_OK);
+        }
+        catch (AuthenticationError e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         }
     }
 }
