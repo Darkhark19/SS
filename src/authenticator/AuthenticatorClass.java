@@ -7,12 +7,10 @@ import database.DatabaseOperator;
 import database.exceptions.*;
 import models.Account;
 
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.sql.SQLException;
-import java.util.Objects;
 
 public class AuthenticatorClass implements Authenticator {
 
@@ -28,10 +26,13 @@ public class AuthenticatorClass implements Authenticator {
         if (!pwd1.equals(pwd2)) {
             throw new RuntimeException("Passwords do not match");
         }
+        System.out.println("Create account authenticator class");
+
         try {
             if (accountExists(name)) {
                 throw new NameAlreadyExists();
             }
+            System.out.println("Create account authenticator class and check if account exists");
             db.createAccount(name, pwd1);
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -106,19 +107,20 @@ public class AuthenticatorClass implements Authenticator {
         // check tokens in session against session info
         // refresh token (optional)
         // if not OK then raise AuthenticationError
-        HttpSession session = request.getSession();
-        String JWTToken = JWTUtils.parseJWT(session.getAttribute(JWTUtils.JWT).toString());
-        System.out.println(JWTToken);
-        String userCookie = request.getCookies()[0].getValue();
-        System.out.println(userCookie);
-        String userToken = JWTUtils.parseJWT(userCookie);
-        System.out.println(userToken);
-        if(Objects.equals(JWTToken, userToken)){
-            Cookie cookie = new Cookie(JWTUtils.JWT, JWTUtils.createJWT(userToken));
-            cookie.setMaxAge(10);
-            response.addCookie(cookie);
+        try {
+            HttpSession session = request.getSession();
+            System.out.println("Session: " + session.getAttribute(JWTUtils.JWT));
+            Object token = session.getAttribute(JWTUtils.JWT);
+            if(token == null)
+                throw new AuthenticationError();
+            String JWTToken = JWTUtils.parseJWT(token.toString());
+            System.out.println( "Token: "+JWTToken);
+            Account c = db.getAccount(JWTToken);
+            c.getJWT();
+            return c;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
-        throw new AuthenticationError();
     }
 
 

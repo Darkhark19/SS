@@ -7,7 +7,7 @@ import java.sql.SQLException;
 
 public class DatabaseManager {
     private static final String DB_URL = "jdbc:sqlite:";
-    private static final String DB_NAME = "/home/tiago/segsof/authenticator-project/database.db";  // change to your local database path
+    private static final String DB_NAME = "D:\\Faculdade\\SS\\Tomcat\\webapps\\myApp\\database.db";  // change to your local database path
 
 
         private static volatile DatabaseManager instance;
@@ -39,9 +39,9 @@ public class DatabaseManager {
 
     public static void main(String[] args) throws SQLException {
         Connection conn = DatabaseManager.getInstance().getConnection();
-        ResultSet rs = conn.createStatement().executeQuery("SELECT * FROM test");
+        ResultSet rs = conn.createStatement().executeQuery("SELECT * FROM accounts");
         while (rs.next()) {
-            System.out.println(rs.getString("health"));
+            System.out.println(rs.getString("name"));
         }
         conn.close();
     }

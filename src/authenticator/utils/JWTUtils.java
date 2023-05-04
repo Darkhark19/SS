@@ -21,13 +21,13 @@ public class JWTUtils {
 
     public static final String JWT ="jwt";
     public static String createJWT(String username) {
-        Map<String,String> claims = new HashMap<>();
+        Map<String,Object> claims = new HashMap<>();
         claims.put("username", username);
         return Jwts.builder()
                 .setSubject(SUBJECT)
                 .setIssuer(ISSUER)
                 .setIssuedAt(new Date())
-                .setClaims(claims)
+                .addClaims(claims)
                 .setExpiration(new Date(System.currentTimeMillis() + VALIDITY))
                 .signWith(new SecretKeySpec(getPassphraseEncoded(), SIGNATURE_ALGORITHM.getJcaName()), SIGNATURE_ALGORITHM)
                 .compact();
@@ -45,15 +45,24 @@ public class JWTUtils {
                     .setSigningKey(getPassphraseEncoded())
                     .build()
                     .parseClaimsJws(jwt).getBody();
-            if(claims.getExpiration() == null || claims.getExpiration().before(new Date()))
+            Date exp = claims.getExpiration();
+            System.out.println("Expiration date: " + exp);
+            System.out.println(claims);
+
+            if(exp == null || exp.before(new Date())) {
+                System.out.println("Expired token");
                 throw new JwtException("Expired JWT token");
-            else if(!claims.getIssuer().equals(ISSUER))
+            }else if(!claims.getIssuer().equals(ISSUER)) {
+                System.out.println("Invalid issuer");
                 throw new JwtException("Invalid JWT issuer");
-            else
+            }else {
+                System.out.println("token good");
                 return claims.get("username").toString();  // returns the username
+            }
         }
         catch (JwtException e) {
-            return null;   // invalid token or expired
+            e.printStackTrace();
+            return  null;// invalid token or expired
         }
     }
 

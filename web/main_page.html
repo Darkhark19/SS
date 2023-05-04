@@ -6,7 +6,12 @@
 </head>
 <body>
     <h1>MAIN PAGE</h1>
-    <a href="login.php">Login</a>
-    <a href="register.php">Register</a>
+    <button onclick="document.location='register.html'" >Create Account</button>
+    <button onclick="document.location='delete_page.html'" >Delete Account</button>
+    <button onclick="document.location='change_pwd_page.html'" >Change Password</button>
+    <br>
+    <form action="login" method="GET">
+        <input type="submit" value="Log Out">
+    </form>
 </body>
 </html>

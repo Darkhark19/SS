@@ -1,35 +1,46 @@
 package authenticator;
 
-import java.io.FileWriter;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 
-public class LogManagerClass implements LogManager{
+import static java.nio.file.StandardOpenOption.APPEND;
 
-    private FileWriter fileWriter;
+public class LogManagerClass implements LogManager {
 
-    public LogManagerClass(){
+    private File file;
+
+    private static final String TOMCAT_PATH = "D:\\Faculdade\\SS\\Tomcat\\webapps";
+    private static final String PATH ="myApp"+File.separator +"src" + File.separator + "authenticator"+ File.separator+"logger.txt";
+    public LogManagerClass() {
+        String absoluteFilePath = TOMCAT_PATH + File.separator + PATH;
+        file = new File(absoluteFilePath);
         try {
-            fileWriter = new FileWriter("logger.txt");
-            System.out.println("Successfully wrote to the file.");
+            if(file.createNewFile()) {
+                System.out.println("Successfully create the file.");
+            } else {
+                System.out.println("File already exists.");
+            }
         } catch (IOException e) {
-            System.out.println("An error occurred.");
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
+
     }
+
     @Override
     public void authenticated(String operation, String name) {
         try {
-            fileWriter.write("Operation: " + operation + " Name: " + name + "\n");
+            String response = "Operation: " + operation + " Name: " + name + "\n";
+            Files.write(file.toPath(),response.getBytes(),APPEND);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public void close(){
-        try {
-            fileWriter.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
+   public static void main(String[] args) {
+        LogManagerClass logManagerClass = new LogManagerClass();
+        logManagerClass.authenticated("CREATE", "teste");
+        logManagerClass.authenticated("CREATE", "te12312ste");
     }
 }

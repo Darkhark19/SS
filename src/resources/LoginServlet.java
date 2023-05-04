@@ -37,7 +37,7 @@ public class LoginServlet extends HttpServlet {
      */
     @Override
     public void doPost(HttpServletRequest request,
-                       HttpServletResponse response) {
+                       HttpServletResponse response) throws IOException {
         String name = request.getParameter("name");
         String pwd = request.getParameter("password");
         try {
@@ -47,20 +47,20 @@ public class LoginServlet extends HttpServlet {
             session.setAttribute(JWTUtils.JWT, token);
             //compute token(s); send token(s) in next reply (cookie)
             //continue with authenticated user (redirect?)
-            Cookie cookie = new Cookie(JWTUtils.JWT, token);
-            cookie.setMaxAge(10);
-            response.addCookie(cookie);
-            response.sendRedirect("mainPage.html");
+            response.sendRedirect("main_page.html");
             response.setStatus(HttpServletResponse.SC_OK);
         }
         catch (AccountNotFountException | UndefinedAccount e) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            response.sendRedirect("login.html");
         }
         catch (LockedAccountException | AccountLockedException e) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.sendRedirect("login.html");
         }
         catch (AuthenticationError e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.sendRedirect("login.html");
         }
         catch (IOException e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -70,14 +70,18 @@ public class LoginServlet extends HttpServlet {
     public void doGet(HttpServletRequest request,
                       HttpServletResponse response) {
         try {
+            System.out.println("Logout");
             Account user = authenticator.check_authenticated_request(request, response);
             authenticator.logout(user);
             HttpSession session = request.getSession(false);
             if (session != null ) session.invalidate();
             response.setStatus(HttpServletResponse.SC_OK);
+            response.sendRedirect("login.html");
         }
         catch (AuthenticationError e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 }
