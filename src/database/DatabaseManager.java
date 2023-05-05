@@ -2,7 +2,6 @@ package database;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class DatabaseManager {
@@ -36,14 +35,6 @@ public class DatabaseManager {
             }
             return instance;
         }
-
-    public static void main(String[] args) throws SQLException {
-        Connection conn = DatabaseManager.getInstance().getConnection();
-        ResultSet rs = conn.createStatement().executeQuery("SELECT * FROM accounts");
-        while (rs.next()) {
-            System.out.println(rs.getString("name"));
-        }
-        conn.close();
-    }
+        
 }
 

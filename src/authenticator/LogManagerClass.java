@@ -3,6 +3,7 @@ package authenticator;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Date;
 
 import static java.nio.file.StandardOpenOption.APPEND;
 
@@ -28,9 +29,12 @@ public class LogManagerClass implements LogManager {
     }
 
     @Override
-    public void authenticated(String operation, String name) {
+    public void authenticated(String operation, String account, String operator) {
         try {
-            String response = "Operation: " + operation + " Name: " + name + "\n";
+            Date date = new Date(System.currentTimeMillis());
+            String response = date +" Operation: " + operation +
+                    " Account: " + account +
+                    " Done By Name: " + operator + "\n";
             Files.write(file.toPath(),response.getBytes(),APPEND);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -38,9 +42,4 @@ public class LogManagerClass implements LogManager {
     }
 
 
-   public static void main(String[] args) {
-        LogManagerClass logManagerClass = new LogManagerClass();
-        logManagerClass.authenticated("CREATE", "teste");
-        logManagerClass.authenticated("CREATE", "te12312ste");
-    }
 }

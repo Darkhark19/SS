@@ -2,6 +2,7 @@ package resources;
 
 import authenticator.Authenticator;
 import authenticator.AuthenticatorClass;
+import authenticator.LogManagerClass;
 import authenticator.utils.JWTUtils;
 import database.exceptions.AccountNotFountException;
 import database.exceptions.AuthenticationError;
@@ -14,14 +15,17 @@ import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.IOException;
+import java.io.PrintWriter;
 
 @WebServlet("/login")
 public class LoginServlet extends HttpServlet {
 
     private Authenticator authenticator;
+    private LogManagerClass logger;
     @Override
     public void init() throws ServletException {
         this.authenticator = new AuthenticatorClass();
+        this.logger = new LogManagerClass();
         super.init();
     }
     @Override
@@ -47,20 +51,21 @@ public class LoginServlet extends HttpServlet {
             session.setAttribute(JWTUtils.JWT, token);
             //compute token(s); send token(s) in next reply (cookie)
             //continue with authenticated user (redirect?)
+            logger.authenticated("LOGIN", name,authUser.getUsername());
             response.sendRedirect("main_page.html");
             response.setStatus(HttpServletResponse.SC_OK);
         }
         catch (AccountNotFountException | UndefinedAccount e) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            response.sendRedirect("login.html");
+            print(response, "Not Found");
         }
         catch (LockedAccountException | AccountLockedException e) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.sendRedirect("login.html");
+            print(response, "Forbidden Error");
         }
         catch (AuthenticationError e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.sendRedirect("login.html");
+            print(response, "Authentication Error");
         }
         catch (IOException e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -68,20 +73,27 @@ public class LoginServlet extends HttpServlet {
     }
 
     public void doGet(HttpServletRequest request,
-                      HttpServletResponse response) {
+                      HttpServletResponse response) throws IOException {
         try {
-            System.out.println("Logout");
             Account user = authenticator.check_authenticated_request(request, response);
             authenticator.logout(user);
             HttpSession session = request.getSession(false);
             if (session != null ) session.invalidate();
+            logger.authenticated("LOG OUT", user.getUsername(),user.getUsername());
             response.setStatus(HttpServletResponse.SC_OK);
-            response.sendRedirect("login.html");
+            print(response, "Logged out");
         }
         catch (AuthenticationError e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            print(response, "Need to login first");
         }
+    }
+    private void print(HttpServletResponse response, String message) throws IOException {
+        PrintWriter out = response.getWriter();
+        response.setContentType("text/html");
+        out.println(message);
+        out.println("<br/>");
+        out.println("<a href="+ "index.html" +">Continue</a>");
+        out.close();
     }
 }

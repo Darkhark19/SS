@@ -22,17 +22,14 @@ public class AuthenticatorClass implements Authenticator {
     }
 
     @Override
-    public void createAccount(String name, String pwd1, String pwd2) throws NameAlreadyExists, RuntimeException {
-        if (!pwd1.equals(pwd2)) {
-            throw new RuntimeException("Passwords do not match");
-        }
-        System.out.println("Create account authenticator class");
+    public void createAccount(String name, String pwd1, String pwd2) throws NameAlreadyExists, RuntimeException, PasswordNotMatchException {
 
         try {
-            if (accountExists(name)) {
+            if (!pwd1.equals(pwd2)) {
+                throw new PasswordNotMatchException();
+            } else if (accountExists(name)) {
                 throw new NameAlreadyExists();
             }
-            System.out.println("Create account authenticator class and check if account exists");
             db.createAccount(name, pwd1);
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -40,14 +37,16 @@ public class AuthenticatorClass implements Authenticator {
     }
 
     @Override
-    public void deleteAccount(String name) throws AccountNotFountException, RuntimeException {
+    public void deleteAccount(String name) throws AccountNotFountException, RuntimeException, DeleteAccountException {
         try {
             Account account = db.getAccount(name);
-            if (account == null)
+            if (account == null) {
                 throw new AccountNotFountException();
-            if (account.isLoggedIn() || !account.isLocked())
-                throw new RuntimeException("Cannot delete account");
-            db.deleteAccount(name);
+            } else if (account.isLoggedIn() || !account.isLocked()) {
+                throw new DeleteAccountException();
+            } else {
+                db.deleteAccount(name);
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -66,8 +65,18 @@ public class AuthenticatorClass implements Authenticator {
     }
 
     @Override
-    public void changePwd(String name, String pwd1, String pwd2) {
-
+    public void changePwd(String name, String pwd1, String pwd2) throws AccountNotFountException {
+        try {
+            if (!accountExists(name)) {
+                throw new AccountNotFountException();
+            } else if (!pwd1.equals(pwd2)) {
+                throw new RuntimeException("Passwords do not match");
+            }else{
+                db.changePwd(name, pwd1);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -79,11 +88,18 @@ public class AuthenticatorClass implements Authenticator {
             } else if (account.isLocked()) {
                 throw new LockedAccountException();
             } else if (!account.getPassword().equals(PasswordUtils.hashPassword(pwd))) {
+                int tries = db.getAccountTries(name);
+                if(tries >= 3){
+                    db.setLock(name, true);
+                    account.setLocked(true);
+                }
+                db.updateAccountTries(name, db.getAccountTries(name) + 1);
                 throw new AuthenticationError();
             } else {
                 db.setLoggedIn(name, true);
                 account.setLoggedIn(true);
                 account.clearPassword();
+                db.updateAccountTries(name, 0);
                 return account;
             }
         } catch (SQLException e) {
@@ -93,10 +109,13 @@ public class AuthenticatorClass implements Authenticator {
     }
 
     @Override
-    public void logout(Account acc) {
+    public void logout(Account acc) throws AuthenticationError {
         try {
+            if (!acc.isLoggedIn()) {
+                throw new AuthenticationError();
+            }
             acc.setLoggedIn(false);
-            db.logoutAccount(acc.getUsername());
+            db.setLoggedIn(acc.getUsername(),false);
         } catch (SQLException | AccountNotFountException e) {
             throw new RuntimeException(e);
         }
@@ -109,12 +128,12 @@ public class AuthenticatorClass implements Authenticator {
         // if not OK then raise AuthenticationError
         try {
             HttpSession session = request.getSession();
-            System.out.println("Session: " + session.getAttribute(JWTUtils.JWT));
             Object token = session.getAttribute(JWTUtils.JWT);
-            if(token == null)
+            if (token == null)
                 throw new AuthenticationError();
             String JWTToken = JWTUtils.parseJWT(token.toString());
-            System.out.println( "Token: "+JWTToken);
+            if (JWTToken == null)
+                throw new AuthenticationError();
             Account c = db.getAccount(JWTToken);
             c.getJWT();
             return c;
@@ -122,6 +141,7 @@ public class AuthenticatorClass implements Authenticator {
             throw new RuntimeException(e);
         }
     }
+
 
 
     // check if account with given name exists

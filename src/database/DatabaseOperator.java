@@ -18,25 +18,29 @@ public class DatabaseOperator {
     public void createAccount(String name, String hashedPwd) throws SQLException {
 
         String sql = "INSERT INTO accounts(name,password) VALUES(?,?)";
-        System.out.println("Create account data base");
-        System.out.println(name + " " + hashedPwd);
         PreparedStatement pstmt = connection.prepareStatement(sql);
         pstmt.setString(1, name);
         pstmt.setString(2, hashedPwd);
         pstmt.executeUpdate();
+
+        String sql2 = "INSERT INTO user_tries(username) VALUES(?)";
+        PreparedStatement pstmt2 = connection.prepareStatement(sql2);
+        pstmt2.setString(1, name);
+        pstmt2.executeUpdate();
     }
 
     public void deleteAccount(String name) throws SQLException, AccountNotFountException {
         String sql = "DELETE FROM accounts WHERE name=?";
         PreparedStatement pstmt = connection.prepareStatement(sql);
-        System.out.println("Delete account data base");
-        System.out.println(name);
         pstmt.setString(1, name);
         int result = pstmt.executeUpdate();
         if (result == 0) {
             throw new AccountNotFountException();
         }
-
+        String sql2 = "DELETE FROM user_tries WHERE username=?";
+        PreparedStatement pstmt2 = connection.prepareStatement(sql2);
+        pstmt2.setString(1, name);
+        pstmt2.executeUpdate();
     }
 
     public void setLock(String name, boolean lock) throws SQLException, AccountNotFountException {
@@ -44,7 +48,6 @@ public class DatabaseOperator {
         PreparedStatement pstmt = connection.prepareStatement(sql);
         pstmt.setBoolean(1, lock);
         pstmt.setString(2, name);
-        System.out.println("set lock account data base");
         int result = pstmt.executeUpdate();
         if (result == 0) {
             throw new AccountNotFountException();
@@ -55,18 +58,6 @@ public class DatabaseOperator {
         String sql = "UPDATE accounts SET logged_in=? WHERE name=?";
         PreparedStatement pstmt = connection.prepareStatement(sql);
         pstmt.setBoolean(1, loggedIn);
-        pstmt.setString(2, name);
-        int result = pstmt.executeUpdate();
-        if (result == 0) {
-            throw new AccountNotFountException();
-        }
-    }
-    public void logoutAccount(String name) throws SQLException, AccountNotFountException {
-        String sql = "UPDATE accounts SET logged_in=? WHERE name=?";
-        PreparedStatement pstmt = connection.prepareStatement(sql);
-        System.out.println("set logout account data base");
-        System.out.println(name);
-        pstmt.setBoolean(1, false);
         pstmt.setString(2, name);
         int result = pstmt.executeUpdate();
         if (result == 0) {
@@ -85,12 +76,26 @@ public class DatabaseOperator {
         return DatabaseMapper.mapToAccount(rs);
     }
 
-
+    public int getAccountTries(String username) throws SQLException, AccountNotFountException {
+        String sql = "SELECT counter FROM user_tries WHERE username=?";
+        PreparedStatement pstmt = connection.prepareStatement(sql);
+        pstmt.setString(1, username);
+        ResultSet rs = pstmt.executeQuery();
+        if (!rs.next()) {
+            throw new AccountNotFountException();
+        }
+        return rs.getInt("counter");
+    }
+    public void updateAccountTries(String username,int tries) throws SQLException {
+        String sql = "UPDATE user_tries SET counter=? WHERE username=?";
+        PreparedStatement pstmt = connection.prepareStatement(sql);
+        pstmt.setInt(1, tries);
+        pstmt.setString(2, username);
+        pstmt.executeUpdate();
+    }
 
     public void changePwd(String name, String newHashedPwd) throws SQLException, AccountNotFountException {
         String sql = "UPDATE accounts SET password=? WHERE name=?";
-        System.out.println("set pwd account data base");
-        System.out.println(name + " " + newHashedPwd);
         PreparedStatement pstmt = connection.prepareStatement(sql);
         pstmt.setString(1, newHashedPwd);
         pstmt.setString(2, name);
@@ -98,6 +103,11 @@ public class DatabaseOperator {
         if (result == 0) {
             throw new AccountNotFountException();
         }
+    }
+
+    public static void main(String[] args) throws SQLException, AccountNotFountException {
+        DatabaseOperator db = new DatabaseOperator();
+        db.createAccount("test", "test");
     }
 }
 

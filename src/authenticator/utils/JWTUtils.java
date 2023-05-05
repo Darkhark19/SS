@@ -46,9 +46,6 @@ public class JWTUtils {
                     .build()
                     .parseClaimsJws(jwt).getBody();
             Date exp = claims.getExpiration();
-            System.out.println("Expiration date: " + exp);
-            System.out.println(claims);
-
             if(exp == null || exp.before(new Date())) {
                 System.out.println("Expired token");
                 throw new JwtException("Expired JWT token");
@@ -56,7 +53,6 @@ public class JWTUtils {
                 System.out.println("Invalid issuer");
                 throw new JwtException("Invalid JWT issuer");
             }else {
-                System.out.println("token good");
                 return claims.get("username").toString();  // returns the username
             }
         }
