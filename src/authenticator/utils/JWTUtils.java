@@ -20,10 +20,11 @@ public class JWTUtils {
     private static final SignatureAlgorithm SIGNATURE_ALGORITHM = SignatureAlgorithm.HS256;
 
     public static final String JWT ="jwt";
-    public static String createJWT(String username) {
+    public static String createJWT(String username,String id) {
         Map<String,Object> claims = new HashMap<>();
         claims.put("username", username);
         return Jwts.builder()
+                .setId(id)
                 .setSubject(SUBJECT)
                 .setIssuer(ISSUER)
                 .setIssuedAt(new Date())
@@ -39,7 +40,7 @@ public class JWTUtils {
      * @param jwt the JWT
      * @return username or null if invalid token or expired
      */
-    public static String parseJWT(String jwt) {
+    public static String parseJWT(String jwt, String id) {
         try {
             Claims claims = Jwts.parserBuilder()
                     .setSigningKey(getPassphraseEncoded())
@@ -52,7 +53,10 @@ public class JWTUtils {
             }else if(!claims.getIssuer().equals(ISSUER)) {
                 System.out.println("Invalid issuer");
                 throw new JwtException("Invalid JWT issuer");
-            }else {
+            }else if(!claims.getId().equals(id)) {
+                System.out.println("Invalid id");
+                throw new JwtException("Invalid JWT id");
+            } else {
                 return claims.get("username").toString();  // returns the username
             }
         }

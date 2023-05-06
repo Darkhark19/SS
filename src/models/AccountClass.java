@@ -51,8 +51,8 @@ public class AccountClass implements Account, Cloneable {
     }
 
     @Override
-    public String getJWT() {
-        return JWTUtils.createJWT(this.username);
+    public String getJWT(String id) {
+        return JWTUtils.createJWT(this.username,id);
     }
 
     @Override

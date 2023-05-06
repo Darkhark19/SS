@@ -9,7 +9,7 @@ public interface Account {
 
     boolean isLocked();
 
-    String getJWT();
+    String getJWT(String id);
     void setLoggedIn(boolean b);
 
     void setLocked(boolean b);
@@ -17,4 +17,5 @@ public interface Account {
     void clearPassword();
 
     Account clone();
+
 }

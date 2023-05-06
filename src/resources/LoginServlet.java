@@ -47,7 +47,7 @@ public class LoginServlet extends HttpServlet {
         try {
             Account authUser = authenticator.authenticate_user(name, pwd);
             HttpSession session = request.getSession(true);
-            String token = authUser.getJWT();
+            String token = authUser.getJWT(session.getId());
             session.setAttribute(JWTUtils.JWT, token);
             //compute token(s); send token(s) in next reply (cookie)
             //continue with authenticated user (redirect?)
