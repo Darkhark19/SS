@@ -1,5 +1,8 @@
 # Software Security project
 Academic project for Software Security class.
+## Authors
+* Diogo Ye
+* Tiago Vieira 57719
 
 ## Run instructions:
 1. Change the LOCAL_PATH constant in the src/authenticator/AuthenticatorClass.java to the absolute path of the directory where you cloned the project.
