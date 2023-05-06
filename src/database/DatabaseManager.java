@@ -1,12 +1,15 @@
 package database;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+import static authenticator.AuthenticatorClass.LOCAL_PATH;
+
 public class DatabaseManager {
     private static final String DB_URL = "jdbc:sqlite:";
-    private static final String DB_NAME = "D:\\Faculdade\\SS\\Tomcat\\webapps\\myApp\\database.db";  // change to your local database path
+    private static final String DB_NAME = LOCAL_PATH + File.separator +"database.db";
 
 
         private static volatile DatabaseManager instance;

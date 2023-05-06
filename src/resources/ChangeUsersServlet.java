@@ -47,12 +47,19 @@ public class ChangeUsersServlet extends HttpServlet {
         try {
             Account account = authenticator.check_authenticated_request(request, response);
             String operator = account.getUsername();
-            String pwd1 = PasswordUtils.hashPassword(request.getParameter("pwd1"));
-            String pwd2 = PasswordUtils.hashPassword(request.getParameter("pwd2"));
-            authenticator.changePwd(name, pwd1, pwd2);
-            logger.authenticated(CHANCE_PASSWORD,name, operator);
-            response.setStatus(HttpServletResponse.SC_OK);
-            print(response, "Password changed", "main_page.html");
+            if(!(operator.equals(name)  || operator.equals("root"))){
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                logger.authenticated(CHANCE_PASSWORD + " Error",name, operator);
+                print(response,  "Cannot change password.", DELETE_PAGE);
+            }
+            else {
+                String pwd1 = PasswordUtils.hashPassword(request.getParameter("pwd1"));
+                String pwd2 = PasswordUtils.hashPassword(request.getParameter("pwd2"));
+                authenticator.changePwd(name, pwd1, pwd2);
+                logger.authenticated(CHANCE_PASSWORD, name, operator);
+                response.setStatus(HttpServletResponse.SC_OK);
+                print(response, "Password changed", "main_page.html");
+            }
         } catch ( AuthenticationError e) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             logger.authenticated(CHANCE_PASSWORD + " Error",name, "Unknown");
@@ -73,10 +80,17 @@ public class ChangeUsersServlet extends HttpServlet {
         String name = request.getParameter("name");
         try {
             Account acc = authenticator.check_authenticated_request(request, response);
-            authenticator.deleteAccount(name);
-            logger.authenticated(DELETE,name, acc.getUsername());
-            response.setStatus(HttpServletResponse.SC_OK);
-            print(response, "Account Deleted", "main_page.html");
+            if(!acc.getUsername().equals("root") || name.equals("root")){
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                logger.authenticated(DELETE + " Error",name, acc.getUsername());
+                print(response,  "Cannot delete.", DELETE_PAGE);
+            }
+            else {
+                authenticator.deleteAccount(name);
+                logger.authenticated(DELETE, name, acc.getUsername());
+                response.setStatus(HttpServletResponse.SC_OK);
+                print(response, "Account Deleted", "main_page.html");
+            }
         }
         catch (AccountNotFountException e) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);

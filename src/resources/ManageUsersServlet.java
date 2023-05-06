@@ -66,7 +66,7 @@ public class ManageUsersServlet extends HttpServlet {
             response.sendRedirect("register.html");
         } catch (AuthenticationError e) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.sendRedirect("register.html");
+            response.sendRedirect("index.html");
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (RuntimeException e){
@@ -97,7 +97,6 @@ public class ManageUsersServlet extends HttpServlet {
             pwriter.println("User Details Page:");
             pwriter.println("<br/>");
             pwriter.println("Username: "+account.getUsername());
-            //pwriter.println("pwd: "+account.getPassword());
             pwriter.println("<br/>");
             pwriter.println("<a href='main_page.html'>Back</a>");
             pwriter.close();
@@ -108,7 +107,6 @@ public class ManageUsersServlet extends HttpServlet {
             logger.authenticated(GET+" Error", name, "Unknown");
             response.setContentType("text/html");
             pwriter.println("Username: "+name+" not found");
-            //pwriter.println("pwd: "+account.getPassword());
             pwriter.println("<br/>");
             pwriter.println("<a href='main_page.html'>Back</a>");
             pwriter.close();
