@@ -5,16 +5,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Date;
 
+import static authenticator.AuthenticatorClass.LOCAL_PATH;
 import static java.nio.file.StandardOpenOption.APPEND;
 
 public class LogManagerClass implements LogManager {
 
     private File file;
-
-    private static final String TOMCAT_PATH = "D:\\Faculdade\\SS\\Tomcat\\webapps";
-    private static final String PATH ="myApp"+File.separator +"src" + File.separator + "authenticator"+ File.separator+"logger.txt";
+    private static final String PATH =  "src" + File.separator + "authenticator"+ File.separator+"logger.txt";
     public LogManagerClass() {
-        String absoluteFilePath = TOMCAT_PATH + File.separator + PATH;
+        String absoluteFilePath = LOCAL_PATH + File.separator + PATH;
         file = new File(absoluteFilePath);
         try {
             if(file.createNewFile()) {
