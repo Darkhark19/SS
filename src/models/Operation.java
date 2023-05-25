@@ -1,14 +1,18 @@
 package models;
 
-public class Role {
+public enum Operation {
+    READ("read"),
+    WRITE("write"),
+    DELETE("delete");
+
     private final String description;
 
-    public Role(String description) {
+    private Operation(String description) {
         this.description = description;
 
     }
+
     public String getDescription() {
         return this.description;
     }
-
 }

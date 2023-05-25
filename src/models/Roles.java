@@ -1,18 +1,33 @@
 package models;
 
-public enum Roles {
-    ADMIN("admin"),
-    NORMAL("normal");
+import java.util.List;
 
-    private String description;
+public class Roles {
 
-    private Roles(String description) {
-        this.description = description;
+    private Account user;
+    private List<Role> roles;
 
+    public Roles(Account user, List<Role> role){
+        this.roles = role;
+        this.user = user;
     }
 
-    public String getDescription() {
-        return this.description;
+    public Account getUser() {
+        return user;
     }
 
+    public void setUser(Account user) {
+        this.user = user;
+    }
+
+    public List<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<Role> roles) {
+        this.roles = roles;
+    }
 }
+
+
+
