@@ -8,6 +8,7 @@ public class AccountClass implements Account, Cloneable {
     private boolean loggedIn;
     private boolean locked;
 
+
     public AccountClass(String username, String password, boolean loggedIn, boolean locked) {
         this.username = username;
         this.password = password;

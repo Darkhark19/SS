@@ -1,9 +1,7 @@
 package database;
 
 import database.exceptions.AccountNotFountException;
-import models.Account;
-import models.Role;
-import models.Roles;
+import models.*;
 
 import java.sql.*;
 import java.util.LinkedList;
@@ -155,11 +153,41 @@ public class DatabaseOperator {
         pstmt.setString(1, role.getDescription());
         pstmt.executeUpdate();
     }
+    public Role getRole(String roleId) throws SQLException {
+        String sql = "SELECT * FROM roles WHERE role=?";
+        PreparedStatement pstmt = connection.prepareStatement(sql);
+        pstmt.setString(1, roleId);
+        ResultSet rs = pstmt.executeQuery();
+        if(!rs.next()){
+            return null;
+        }
+        return new Role(rs.getString("role"));
+    }
+    public void createPermission(Role role, Resource res, Operation op) throws SQLException {
+        String sql = "INSERT INTO permissions(role,resource,operation) VALUES(?,?,?)";
+        PreparedStatement pstmt = connection.prepareStatement(sql);
+        pstmt.setString(1, role.getDescription());
+        pstmt.setString(2, res.getDescription());
+        pstmt.setString(3, op.getDescription());
+        pstmt.executeUpdate();
+    }
+
+    public void deletePermission(Role role, Resource res, Operation op) throws SQLException {
+        String sql = "DELETE FROM permissions WHERE role=? AND resource=? AND operation=?";
+        PreparedStatement pstmt = connection.prepareStatement(sql);
+        pstmt.setString(1, role.getDescription());
+        pstmt.setString(2, res.getDescription());
+        pstmt.setString(3, op.getDescription());
+        pstmt.executeUpdate();
+    }
 
     public static void main(String[] args) throws SQLException, AccountNotFountException {
         DatabaseOperator db = new DatabaseOperator();
         db.createAccount("test", "test");
     }
+
+
+
 }
 
 

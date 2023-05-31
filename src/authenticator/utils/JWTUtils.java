@@ -33,9 +33,6 @@ public class JWTUtils {
                 .signWith(new SecretKeySpec(getPassphraseEncoded(), SIGNATURE_ALGORITHM.getJcaName()), SIGNATURE_ALGORITHM)
                 .compact();
     }
-    public static String createAccessToken(String username, String id){
-
-    }
 
     /**
      * Parses the JWT and returns the username

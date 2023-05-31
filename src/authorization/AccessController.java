@@ -12,4 +12,5 @@ public interface AccessController {
     Capability createKey(Role role);
     void checkPermission(Capability cap, Resource res, Operation op);
 
+    Role getRole(String roleId);
 }

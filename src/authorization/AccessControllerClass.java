@@ -23,6 +23,8 @@ public class AccessControllerClass implements AccessController{
         return new Role(roleId);
     }
 
+
+
     @Override
     public void setRole(Account user, Role role) {
         try {
@@ -72,5 +74,15 @@ public class AccessControllerClass implements AccessController{
     @Override
     public void checkPermission(Capability cap, Resource res, Operation op) {
 
+    }
+
+    @Override
+    public Role getRole(String roleId) {
+        try {
+            return db.getRole(roleId);
+        } catch (SQLException e) {
+            System.out.println("Error getting role");
+            throw new RuntimeException(e);
+        }
     }
 }

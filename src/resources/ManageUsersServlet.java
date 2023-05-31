@@ -5,6 +5,8 @@ import authenticator.AuthenticatorClass;
 import authenticator.LogManager;
 import authenticator.LogManagerClass;
 import authenticator.utils.PasswordUtils;
+import authorization.AccessController;
+import authorization.AccessControllerClass;
 import database.exceptions.AccountNotFountException;
 import database.exceptions.AuthenticationError;
 import database.exceptions.NameAlreadyExists;
@@ -27,10 +29,12 @@ public class ManageUsersServlet extends HttpServlet {
     private Authenticator authenticator;
     private LogManager logger;
 
+    private AccessController accessController;
 
     @Override
     public void init() throws ServletException {
         this.authenticator = new AuthenticatorClass();
+        accessController = new AccessControllerClass();
         this.logger = new LogManagerClass();
         super.init();
     }
@@ -48,6 +52,7 @@ public class ManageUsersServlet extends HttpServlet {
         String pwd2 = PasswordUtils.hashPassword(request.getParameter("pwd2"));
         try {
             Account account = authenticator.check_authenticated_request(request, response);
+
             authenticator.createAccount(name, pwd1, pwd2);
             logger.authenticated(CREATE, name, account.getUsername());
             response.setStatus(HttpServletResponse.SC_CREATED);
