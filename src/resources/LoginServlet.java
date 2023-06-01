@@ -13,7 +13,6 @@ import database.exceptions.LockedAccountException;
 import database.exceptions.UndefinedAccount;
 import models.Account;
 
-import javax.security.auth.login.AccountLockedException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -69,7 +68,7 @@ public class LoginServlet extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             print(response, "Not Found");
         }
-        catch (LockedAccountException | AccountLockedException e) {
+        catch (LockedAccountException e) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             print(response, "Forbidden Error");
         }

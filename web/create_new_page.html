@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h1>Create page</h1>
+<form action="pages" method="POST">
+    <label for="title">Page:</label>
+    <input type="text" id="title" name="title"><br><br>
+    <label for="pic">Pic:</label>
+    <input type="text" id="pic" name="pic"><br><br>
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username"><br><br>
+    <label for="email">Email:</label>
+    <input type="text" id="email" name="email"><br><br>
+    <input type="submit" value="Submit">
+</form>
+<br>
+<h1>Delete page</h1>
+<form action="pages" method="GET">
+    <label for="delete_title">Page:</label>
+    <input type="text" id="delete_title" name="delete_title"><br><br>
+    <input type="submit" value="Submit">
+</body>
+</html>

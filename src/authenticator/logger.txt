@@ -1,0 +1,7 @@
+Fri May 05 12:22:06 WEST 2023 Operation: LOGIN Account: root Done By Name: root
+Fri May 05 12:22:10 WEST 2023 Operation: LOG OUT Account: root Done By Name: root
+Sat May 06 12:58:11 WEST 2023 Operation: LOGIN Account: root Done By Name: root
+Sat May 06 12:58:33 WEST 2023 Operation: Password changed Account: root Done By Name: root
+Sat May 06 12:59:03 WEST 2023 Operation: LOG OUT Account: root Done By Name: root
+Sat May 06 12:59:08 WEST 2023 Operation: LOGIN Account: root Done By Name: root
+Thu Jun 01 17:43:59 WEST 2023 Operation: LOGIN Account: root Done By Name: root

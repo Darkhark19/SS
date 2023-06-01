@@ -2,11 +2,10 @@ package models;
 
 public enum Operation {
     READ("READ"),
-    SET("SET"),
     WRITE("WRITE"),
-    GRANT("GRANT"),
-    CREATE("CREATE"),
-    REVOKE("REVOKE"),
+    PUT("PUT"),
+    LIKE("LIKE"),
+    UNLIKE("UNLIKE"),
     DELETE("DELETE");
 
     private final String description;

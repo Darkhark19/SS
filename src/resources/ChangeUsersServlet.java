@@ -5,10 +5,15 @@ import authenticator.AuthenticatorClass;
 import authenticator.LogManager;
 import authenticator.LogManagerClass;
 import authenticator.utils.PasswordUtils;
+import authorization.AccessController;
+import authorization.AccessControllerClass;
+import database.exceptions.AccessControlError;
 import database.exceptions.AccountNotFountException;
 import database.exceptions.AuthenticationError;
 import database.exceptions.DeleteAccountException;
 import models.Account;
+import models.Operation;
+import models.Resource;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -31,6 +36,8 @@ public class ChangeUsersServlet extends HttpServlet {
     private static final String NOT_FOUND = "Account not found";
 
     private Authenticator authenticator;
+
+    private AccessController accessController;
     private LogManager logger;
 
 
@@ -38,8 +45,10 @@ public class ChangeUsersServlet extends HttpServlet {
     public void init() throws ServletException {
         this.authenticator = new AuthenticatorClass();
         this.logger = new LogManagerClass();
+        accessController = new AccessControllerClass();
         super.init();
     }
+
     @Override
     public void doPost(HttpServletRequest request,
                        HttpServletResponse response) throws IOException {
@@ -47,31 +56,30 @@ public class ChangeUsersServlet extends HttpServlet {
         try {
             Account account = authenticator.check_authenticated_request(request, response);
             String operator = account.getUsername();
-            if(!(operator.equals(name)  || operator.equals("root"))){
-                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                logger.authenticated(CHANCE_PASSWORD + " Error",name, operator);
-                print(response,  "Cannot change password.", DELETE_PAGE);
-            }
-            else {
-                String pwd1 = PasswordUtils.hashPassword(request.getParameter("pwd1"));
-                String pwd2 = PasswordUtils.hashPassword(request.getParameter("pwd2"));
-                authenticator.changePwd(name, pwd1, pwd2);
-                logger.authenticated(CHANCE_PASSWORD, name, operator);
-                response.setStatus(HttpServletResponse.SC_OK);
-                print(response, "Password changed", "main_page.html");
-            }
-        } catch ( AuthenticationError e) {
+            accessController.checkPermission(request, Resource.CHANGE_USERS, Operation.READ, operator);
+            String pwd1 = PasswordUtils.hashPassword(request.getParameter("pwd1"));
+            String pwd2 = PasswordUtils.hashPassword(request.getParameter("pwd2"));
+            authenticator.changePwd(name, pwd1, pwd2);
+            logger.authenticated(CHANCE_PASSWORD, name, operator);
+            response.setStatus(HttpServletResponse.SC_OK);
+            print(response, "Password changed", "main_page.html");
+        } catch (AuthenticationError e) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            logger.authenticated(CHANCE_PASSWORD + " Error",name, "Unknown");
-            print(response,  "Need to login first", LOGIN_PAGE);
+            logger.authenticated(CHANCE_PASSWORD + " Error", name, "Unknown");
+            print(response, "Need to login first", LOGIN_PAGE);
         } catch (AccountNotFountException e) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            logger.authenticated(CHANCE_PASSWORD + " Error",name, "Unknown");
-            print(response,  "Account not found", CHANGE_PASSWORD_PAGE);
-        } catch (RuntimeException e){
+            logger.authenticated(CHANCE_PASSWORD + " Error", name, "Unknown");
+            print(response, "Account not found", CHANGE_PASSWORD_PAGE);
+        } catch (RuntimeException e) {
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        } catch (AccessControlError e) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            logger.authenticated(CHANCE_PASSWORD + " Error", name, "Unknown");
+            print(response, "Cannot change password.", DELETE_PAGE);
         }
+
     }
 
     @Override
@@ -80,43 +88,43 @@ public class ChangeUsersServlet extends HttpServlet {
         String name = request.getParameter("name");
         try {
             Account acc = authenticator.check_authenticated_request(request, response);
-            if(!acc.getUsername().equals("root") || name.equals("root")){
-                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                logger.authenticated(DELETE + " Error",name, acc.getUsername());
-                print(response,  "Cannot delete.", DELETE_PAGE);
-            }
-            else {
-                authenticator.deleteAccount(name);
-                logger.authenticated(DELETE, name, acc.getUsername());
-                response.setStatus(HttpServletResponse.SC_OK);
-                print(response, "Account Deleted", "main_page.html");
-            }
-        }
-        catch (AccountNotFountException e) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            logger.authenticated(DELETE+" "+NOT_FOUND, name, "Unknown");
-            print(response, NOT_FOUND, DELETE_PAGE);
-        }
-        catch ( AuthenticationError e) {
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            logger.authenticated(DELETE+" No authentication", name, "Unknown");
-            print(response,  "Need to login first", LOGIN_PAGE);
+            String operator = acc.getUsername();
+            accessController.checkPermission(request, Resource.CHANGE_USERS, Operation.READ, operator);
 
+            authenticator.deleteAccount(name);
+            logger.authenticated(DELETE, name, acc.getUsername());
+            response.setStatus(HttpServletResponse.SC_OK);
+            print(response, "Account Deleted", "main_page.html");
+
+        } catch (AccountNotFountException e) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            logger.authenticated(DELETE + " " + NOT_FOUND, name, "Unknown");
+            print(response, NOT_FOUND, DELETE_PAGE);
+        } catch (AuthenticationError e) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            logger.authenticated(DELETE + " No authentication", name, "Unknown");
+            print(response, "Need to login first", LOGIN_PAGE);
         } catch (DeleteAccountException e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            logger.authenticated(DELETE+" Unauthorized", name, "Unknown");
+            logger.authenticated(DELETE + " Unauthorized", name, "Unknown");
             print(response, CANNOT_DELETE, DELETE_PAGE);
-        } catch (RuntimeException e){
+        } catch (RuntimeException e) {
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        } catch (AccessControlError e) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            logger.authenticated(DELETE + " Error", name, name);
+            print(response, "Cannot delete.", DELETE_PAGE);
         }
+
     }
+
     private void print(HttpServletResponse response, String message, String url) throws IOException {
         PrintWriter out = response.getWriter();
         response.setContentType("text/html");
         out.println(message);
         out.println("<br/>");
-        out.println("<a href="+url+">Continue</a>");
+        out.println("<a href=" + url + ">Continue</a>");
         out.close();
     }
 }

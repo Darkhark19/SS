@@ -1,9 +1,13 @@
 package database;
 
+import authenticator.utils.PasswordUtils;
 import database.exceptions.AccountNotFountException;
 import models.*;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -133,7 +137,7 @@ public class DatabaseOperator {
         ResultSet rs = pstmt.executeQuery();
         List<Role> roleList = new LinkedList<>();
         while(rs.next()){
-            roleList.add(new Role(rs.getString("role")));
+            roleList.add(Role.valueOf(rs.getString("role")));
         }
         return new Roles(this.getAccount(username), roleList);
     }
@@ -159,7 +163,7 @@ public class DatabaseOperator {
         if(!rs.next()){
             return null;
         }
-        return new Role(rs.getString("role"));
+        return Role.valueOf(rs.getString("role"));
     }
     public void createPermission(Role role, Resource res, Operation op) throws SQLException {
         String sql = "INSERT INTO permissions(role,resource,operation) VALUES(?,?,?)";
@@ -199,8 +203,20 @@ public class DatabaseOperator {
         return permissions;
     }
 
-    public static void main(String[] args) throws SQLException {
-        DatabaseOperator db = new DatabaseOperator();;
+    public static void main(String[] args) throws Exception {
+        DatabaseOperator db = new DatabaseOperator();
+//        Role admin = Role.ADMIN;
+//        Role user = Role.USER;
+//        db.createPermission(Role.USER, Resource.PAGES, Operation.READ);
+//        db.createPermission(Role.USER, Resource.FOLLOWERS, Operation.WRITE);
+//        db.createPermission(Role.USER, Resource.FOLLOWERS, Operation.PUT);
+//
+//
+//        db.createPermission(admin, Resource.PAGES, Operation.WRITE);
+//        db.createPermission(admin, Resource.USERS, Operation.WRITE);
+//        db.createPermission(admin, Resource.CHANGE_USERS, Operation.READ);
+//        db.createPermission(admin, Resource.CHANGE_USERS, Operation.WRITE);
+        db.createAccount("root", PasswordUtils.hashPassword("1234"));
     }
 
 

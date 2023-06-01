@@ -51,7 +51,7 @@ public class ManageUsersServlet extends HttpServlet {
         String pwd2 = PasswordUtils.hashPassword(request.getParameter("pwd2"));
         try {
             Account account = authenticator.check_authenticated_request(request, response);
-            accessController.checkPermission(request, Resource.USERS, Operation.CREATE, account.getUsername());
+            accessController.checkPermission(request, Resource.USERS, Operation.WRITE, account.getUsername());
 
             authenticator.createAccount(name, pwd1, pwd2);
             logger.authenticated(CREATE, name, account.getUsername());

@@ -25,7 +25,7 @@ public class AccessControllerClass implements AccessController {
             throw new RuntimeException(e);
 
         }
-        return new Role(roleId);
+        return Role.valueOf(roleId.toLowerCase());
     }
 
     @Override
@@ -109,9 +109,7 @@ public class AccessControllerClass implements AccessController {
 
     @Override
     public void checkPermission(HttpServletRequest request, Resource res, Operation op, String username) throws AccessControlError {
-        if(!cap.checkPermission(res, op,username)){
-            throw new AccessControlError();
-        }
+
 
     }
 }

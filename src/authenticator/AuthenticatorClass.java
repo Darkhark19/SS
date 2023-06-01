@@ -93,7 +93,7 @@ public class AuthenticatorClass implements Authenticator {
                 throw new UndefinedAccount();
             } else if (account.isLocked()) {
                 throw new LockedAccountException();
-            } else if (!account.getPassword().equals(PasswordUtils.hashPassword(pwd))) {
+            } else if (!PasswordUtils.checkPassword(pwd,account.getPassword())) {
                 int tries = db.getAccountTries(name);
                 if(tries >= 3){
                     db.setLock(name, true);

@@ -1,9 +1,10 @@
 package models;
 
-public class Role {
+public enum Role {
+    ADMIN("admin"), USER("user");
     private final String description;
 
-    public Role(String description) {
+    private Role(String description) {
         this.description = description;
 
     }

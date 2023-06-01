@@ -6,8 +6,11 @@ public enum Resource {
     USERS("users"),
     PERMISSIONS("permissions"),
     ROLES("roles"),
+    PAGES("pages"),
+    POSTS("posts"),
+    FOLLOWERS("followers"),
+    LIKES("likes"),
     LOGIN("login");
-
     private final String description;
 
     private Resource(String description) {
