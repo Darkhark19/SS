@@ -8,6 +8,8 @@ import authorization.AccessController;
 import authorization.AccessControllerClass;
 import database.exceptions.AuthenticationError;
 import models.Account;
+import models.Operation;
+import models.Resource;
 import models.Role;
 
 import javax.servlet.ServletException;
@@ -21,8 +23,8 @@ import java.io.PrintWriter;
 @WebServlet("/permissions")
 public class ManagePermissionServlet extends HttpServlet {
 
-    private static final String SET = "GRANT";
-    private static final String DELETE = "REVOKE";
+    private static final String GRANT = "GRANT";
+    private static final String REVOKE = "REVOKE";
     private Authenticator authenticator;
     private LogManager logger;
 
@@ -38,23 +40,31 @@ public class ManagePermissionServlet extends HttpServlet {
 
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String role = request.getParameter("role");
+        String resource = request.getParameter("resource");
+        String operation = request.getParameter("operation");
         try{
             Account account = authenticator.check_authenticated_request(request, response);
-            accessController.newRole(role);
-            String name = account.getUsername();
-            logger.authenticated(CREATE, name, name);
+            Role r = accessController.getRole(role);
+            //accessController.checkPermission();
+            accessController.grantPermission(r, Resource.getResource(resource), Operation.getOperation(operation));
+            logger.authenticated(GRANT, role , account.getUsername());
             response.setStatus(HttpServletResponse.SC_CREATED);
             PrintWriter out = response.getWriter();
             response.setContentType("text/html");
-            out.println("Role Created");
+            out.println("Permission Created");
             out.println("Role: "+role);
+            out.println("Resource: "+resource);
+            out.println("Operation: "+operation);
             out.println("<br/>");
             out.println("<a href='main_page.html'>Back</a>");
             out.close();
         } catch (AuthenticationError e) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             response.sendRedirect("index.html");
-        }
+        } /*catch (AccessControlError e){
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.sendRedirect("main_page.html");
+        }*/
     }
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String r = request.getParameter("give_role");
@@ -63,7 +73,7 @@ public class ManagePermissionServlet extends HttpServlet {
             Account account = authenticator.check_authenticated_request(request, response);
             Role role = accessController.getRole(r);
             accessController.setRole(account,role);
-            logger.authenticated(SET, r, name);
+            logger.authenticated(REVOKE, r, name);
             response.setStatus(HttpServletResponse.SC_OK);
             PrintWriter out = response.getWriter();
             response.setContentType("text/html");

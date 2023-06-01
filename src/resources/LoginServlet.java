@@ -4,6 +4,9 @@ import authenticator.Authenticator;
 import authenticator.AuthenticatorClass;
 import authenticator.LogManagerClass;
 import authenticator.utils.JWTUtils;
+import authorization.AccessController;
+import authorization.AccessControllerClass;
+import authorization.Capability;
 import database.exceptions.AccountNotFountException;
 import database.exceptions.AuthenticationError;
 import database.exceptions.LockedAccountException;
@@ -13,19 +16,25 @@ import models.Account;
 import javax.security.auth.login.AccountLockedException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.*;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
 
 @WebServlet("/login")
 public class LoginServlet extends HttpServlet {
 
     private Authenticator authenticator;
     private LogManagerClass logger;
+    private AccessController accessController;
     @Override
     public void init() throws ServletException {
         this.authenticator = new AuthenticatorClass();
         this.logger = new LogManagerClass();
+        this.accessController = new AccessControllerClass();
         super.init();
     }
     @Override
@@ -49,6 +58,7 @@ public class LoginServlet extends HttpServlet {
             HttpSession session = request.getSession(true);
             String token = authUser.getJWT(session.getId());
             session.setAttribute(JWTUtils.JWT, token);
+            setCapabilities(session, authUser);
             //compute token(s); send token(s) in next reply (cookie)
             //continue with authenticated user (redirect?)
             logger.authenticated("LOGIN", name,authUser.getUsername());
@@ -95,5 +105,15 @@ public class LoginServlet extends HttpServlet {
         out.println("<br/>");
         out.println("<a href="+ "index.html" +">Continue</a>");
         out.close();
+    }
+
+    private void setCapabilities(HttpSession session, Account user) {
+        List<Capability> caps = accessController.createKey(user);
+        int counter = 0;
+        for( Capability cap : caps){
+            session.setAttribute("capability"+ counter,
+                    JWTUtils.createJWTPermissions(user.getUsername(),session.getId(),cap));
+        }
+
     }
 }

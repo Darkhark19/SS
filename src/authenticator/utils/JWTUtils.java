@@ -1,5 +1,6 @@
 package authenticator.utils;
 
+import authorization.Capability;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -34,6 +35,21 @@ public class JWTUtils {
                 .compact();
     }
 
+    public static String createJWTPermissions(String username, String id, Capability cap){
+        Map<String,Object> claims = new HashMap<>();
+        claims.put("username", username);
+        claims.put("capability", cap);
+        return Jwts.builder()
+                .setId(id)
+                .setSubject(SUBJECT)
+                .setIssuer(ISSUER)
+                .setIssuedAt(new Date())
+                .addClaims(claims)
+                .setExpiration(new Date(System.currentTimeMillis() + VALIDITY))
+                .signWith(new SecretKeySpec(getPassphraseEncoded(), SIGNATURE_ALGORITHM.getJcaName()), SIGNATURE_ALGORITHM)
+                .compact();
+    }
+
     /**
      * Parses the JWT and returns the username
      * @param jwt the JWT
@@ -57,6 +73,34 @@ public class JWTUtils {
                 throw new JwtException("Invalid JWT id");
             } else {
                 return claims.get("username").toString();  // returns the username
+            }
+        }
+        catch (JwtException e) {
+            e.printStackTrace();
+            return  null;// invalid token or expired
+        }
+    }
+    public static Capability parseCapabilityJWT(String jwt, String id,String username) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(getPassphraseEncoded())
+                    .build()
+                    .parseClaimsJws(jwt).getBody();
+            Date exp = claims.getExpiration();
+            if(exp == null || exp.before(new Date())) {
+                System.out.println("Expired token");
+                throw new JwtException("Expired JWT token");
+            }else if(!claims.getIssuer().equals(ISSUER)) {
+                System.out.println("Invalid issuer");
+                throw new JwtException("Invalid JWT issuer");
+            }else if(!claims.getId().equals(id)) {
+                System.out.println("Invalid id");
+                throw new JwtException("Invalid JWT id");
+            } else if(!claims.get("username").toString().equals(username)){
+                System.out.println("Invalid username");
+                throw new JwtException("Invalid JWT username");
+            }else{
+                return (Capability) claims.get("capability");  // returns the username
             }
         }
         catch (JwtException e) {

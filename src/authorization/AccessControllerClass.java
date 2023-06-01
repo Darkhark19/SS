@@ -1,18 +1,23 @@
 package authorization;
 
 import database.DatabaseOperator;
+import database.exceptions.AccessControlError;
 import models.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.sql.SQLException;
+import java.util.*;
 
-public class AccessControllerClass implements AccessController{
+public class AccessControllerClass implements AccessController {
 
     private final DatabaseOperator db;
+
     public AccessControllerClass() {
         this.db = new DatabaseOperator();
     }
+
     @Override
-    public Role newRole(String roleId)  {
+    public Role newRole(String roleId) {
         try {
             db.createRole(roleId);
         } catch (SQLException e) {
@@ -22,8 +27,6 @@ public class AccessControllerClass implements AccessController{
         }
         return new Role(roleId);
     }
-
-
 
     @Override
     public void setRole(Account user, Role role) {
@@ -41,6 +44,16 @@ public class AccessControllerClass implements AccessController{
             return db.getUserRoles(user.getUsername());
         } catch (SQLException e) {
             System.out.println("Error getting roles");
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public Role getRole(String roleId) {
+        try {
+            return db.getRole(roleId);
+        } catch (SQLException e) {
+            System.out.println("Error getting role");
             throw new RuntimeException(e);
         }
     }
@@ -67,22 +80,39 @@ public class AccessControllerClass implements AccessController{
     }
 
     @Override
-    public Capability createKey(Role role) {
-        return new Capability(role);
-    }
-
-    @Override
-    public void checkPermission(Capability cap, Resource res, Operation op) {
-
-    }
-
-    @Override
-    public Role getRole(String roleId) {
+    public List<Capability> createKey(Account user) {
+        Roles userRoles = this.getRoles(user);
         try {
-            return db.getRole(roleId);
+            Map<Resource, Set<Operation>> resultMap = new HashMap<>();
+            for(Role role : userRoles.getRoles()) {
+                Map<Resource, List<Operation>> permissions = db.getPermissions(role);
+                for(Map.Entry<Resource,List<Operation>> e: permissions.entrySet()){
+                   Set<Operation> ops = resultMap.get(e.getKey());
+                   if(ops == null)
+                       ops = new HashSet<>();
+                   ops.addAll(e.getValue());
+                   resultMap.put(e.getKey(), ops);
+                }
+            }
+            List<Capability> result = new ArrayList<>();
+
+            for(Map.Entry<Resource, Set<Operation>> e: resultMap.entrySet()){
+                Capability cap = new Capability(user.getUsername());
+                Date expire = new Date(System.currentTimeMillis()  + (10 * 60 * 1000));
+                e.getValue().forEach(value -> result.add(cap.makeKey(e.getKey(), value,expire)));
+            }
+            return result;
         } catch (SQLException e) {
-            System.out.println("Error getting role");
             throw new RuntimeException(e);
         }
     }
+
+    @Override
+    public void checkPermission(HttpServletRequest request, Resource res, Operation op, String username) throws AccessControlError {
+        if(!cap.checkPermission(res, op,username)){
+            throw new AccessControlError();
+        }
+
+    }
 }
+

@@ -14,7 +14,7 @@ import java.sql.SQLException;
 
 public class AuthenticatorClass implements Authenticator {
 
-    public static String LOCAL_PATH = "/home/tiago/segsof/authenticator-project";
+    public static String LOCAL_PATH = "D:\\Faculdade\\SS\\Tomcat\\webapps\\myApp";
     /**
      * Please change to your local path where the lib/, src/, web/, etc. are located
      * (directory where you cloned the GitHub repository)

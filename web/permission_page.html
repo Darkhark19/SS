@@ -5,12 +5,26 @@
     <title>Permission page</title>
 </head>
 <body>
-  <h1>Create role</h1>
-  <form action="roles" method="POST">
+  <h1>Grant permission</h1>
+  <form action="permissions" method="POST">
   <label for="role">Role:</label>
   <input type="text" id="role" name="role"><br><br>
+      <label for="resource">Resource:</label>
+      <input type="text" id="resource" name="resource"><br><br>
+      <label for="operation">Operation:</label>
+      <input type="text" id="operation" name="operation"><br><br>
   <input type="submit" value="Submit">
   </form>
 <br>
+<h1>Revoke permission</h1>
+  <form action="permissions" method="GET">
+      <label for="revoke_role">Role:</label>
+      <input type="text" id="revoke_role" name="revoke_role"><br><br>
+      <label for="revoke_resource">Resource:</label>
+      <input type="text" id="revoke_resource" name="revoke_resource"><br><br>
+      <label for="revoke_op">Operation:</label>
+      <input type="text" id="revoke_op" name="revoke_op"><br><br>
+      <input type="submit" value="Submit">
+  </form>
 </body>
 </html>

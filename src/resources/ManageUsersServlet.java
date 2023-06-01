@@ -7,11 +7,10 @@ import authenticator.LogManagerClass;
 import authenticator.utils.PasswordUtils;
 import authorization.AccessController;
 import authorization.AccessControllerClass;
-import database.exceptions.AccountNotFountException;
-import database.exceptions.AuthenticationError;
-import database.exceptions.NameAlreadyExists;
-import database.exceptions.PasswordNotMatchException;
+import database.exceptions.*;
 import models.Account;
+import models.Operation;
+import models.Resource;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -52,6 +51,7 @@ public class ManageUsersServlet extends HttpServlet {
         String pwd2 = PasswordUtils.hashPassword(request.getParameter("pwd2"));
         try {
             Account account = authenticator.check_authenticated_request(request, response);
+            accessController.checkPermission(request, Resource.USERS, Operation.CREATE, account.getUsername());
 
             authenticator.createAccount(name, pwd1, pwd2);
             logger.authenticated(CREATE, name, account.getUsername());
@@ -70,13 +70,16 @@ public class ManageUsersServlet extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             response.sendRedirect("register.html");
         } catch (AuthenticationError e) {
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.sendRedirect("index.html");
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (RuntimeException e){
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        } catch (AccessControlError e) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.sendRedirect("main_page.html");
         }
     }
 
@@ -116,7 +119,7 @@ public class ManageUsersServlet extends HttpServlet {
             pwriter.println("<a href='main_page.html'>Back</a>");
             pwriter.close();
         } catch (AuthenticationError e) {
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             logger.authenticated(GET+" Error", name, "Unknown");
             response.sendRedirect("main_page.html");
         } catch (IOException e) {

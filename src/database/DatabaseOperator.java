@@ -4,8 +4,10 @@ import database.exceptions.AccountNotFountException;
 import models.*;
 
 import java.sql.*;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 public class DatabaseOperator {
     Connection connection;
@@ -106,11 +108,10 @@ public class DatabaseOperator {
     }
 
     public void createUserRole(String username, Role role) throws SQLException {
-        String desc = role.getDescription();
         String sql = "INSERT INTO user_roles(username,role) VALUES(?,?)";
         PreparedStatement pstmt = connection.prepareStatement(sql);
         pstmt.setString(1, username);
-        pstmt.setString(2, role.toString());
+        pstmt.setString(2, role.getDescription());
         pstmt.executeUpdate();
     }
 
@@ -130,13 +131,9 @@ public class DatabaseOperator {
         PreparedStatement pstmt = connection.prepareStatement(sql);
         pstmt.setString(1, username);
         ResultSet rs = pstmt.executeQuery();
-        if (!rs.next()) {
-            return null;
-        }
-        Array roles = rs.getArray("roles");
         List<Role> roleList = new LinkedList<>();
-        for(String role : (String[]) roles.getArray()){
-            roleList.add(new Role(role));
+        while(rs.next()){
+            roleList.add(new Role(rs.getString("role")));
         }
         return new Roles(this.getAccount(username), roleList);
     }
@@ -152,6 +149,7 @@ public class DatabaseOperator {
         PreparedStatement pstmt = connection.prepareStatement(sql);
         pstmt.setString(1, role.getDescription());
         pstmt.executeUpdate();
+
     }
     public Role getRole(String roleId) throws SQLException {
         String sql = "SELECT * FROM roles WHERE role=?";
@@ -181,9 +179,28 @@ public class DatabaseOperator {
         pstmt.executeUpdate();
     }
 
-    public static void main(String[] args) throws SQLException, AccountNotFountException {
-        DatabaseOperator db = new DatabaseOperator();
-        db.createAccount("test", "test");
+    public Map<Resource,List<Operation>> getPermissions(Role role) throws SQLException {
+        String sql = "SELECT * FROM permissions WHERE role=?";
+        PreparedStatement pstmt = connection.prepareStatement(sql);
+        pstmt.setString(1, role.getDescription());
+        ResultSet rs = pstmt.executeQuery();
+        Map<Resource,List<Operation>> permissions = new HashMap<>();
+        while(rs.next()){
+            Operation op =Operation.getOperation(rs.getString("operation"));
+            String  resource = rs.getString("resource");
+            Resource res = Resource.getResource(resource);
+            List<Operation> ops = permissions.get(res);
+            if(ops == null){
+                ops = new LinkedList<>();
+            }
+            ops.add(op);
+            permissions.put(res,ops);
+        }
+        return permissions;
+    }
+
+    public static void main(String[] args) throws SQLException {
+        DatabaseOperator db = new DatabaseOperator();;
     }
 
 
