@@ -1,27 +1,9 @@
 package resources;
 
-import authenticator.Authenticator;
-import authenticator.AuthenticatorClass;
-import authenticator.LogManager;
-import authenticator.LogManagerClass;
-import authorization.AccessController;
-import authorization.AccessControllerClass;
-import database.exceptions.AuthenticationError;
-import models.Account;
-import models.Operation;
-import models.Resource;
-import models.Role;
-
-import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.PrintWriter;
 
 @WebServlet("/permissions")
-public class ManagePermissionServlet extends HttpServlet {
+public class ManagePermissionServlet{/* extends HttpServlet {
 
     private static final String GRANT = "GRANT";
     private static final String REVOKE = "REVOKE";
@@ -66,7 +48,7 @@ public class ManagePermissionServlet extends HttpServlet {
             response.sendRedirect("main_page.html");
         }*/
     }
-    public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+   /* public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String r = request.getParameter("give_role");
         String name = request.getParameter("name");
         try{
@@ -86,4 +68,4 @@ public class ManagePermissionServlet extends HttpServlet {
             response.sendRedirect("index.html");
         }
     }
-}
+}*/

@@ -28,7 +28,7 @@ public class ChangeUsersServlet extends HttpServlet {
 
     private static final String DELETE = "DELETE";
     private static final String CANNOT_DELETE = "Cannot delete this account";
-    private static final String DELETE_PAGE = "'delete_page.html'";
+    private static final String DELETE_PAGE = "'delete_user_page.html'";
     private static final String LOGIN_PAGE = "'index.html'";
     private static final String CHANCE_PASSWORD = "Password changed";
     private static final String CHANGE_PASSWORD_PAGE = "'change_pwd_page.html'";
@@ -43,7 +43,7 @@ public class ChangeUsersServlet extends HttpServlet {
 
     @Override
     public void init() throws ServletException {
-        this.authenticator = new AuthenticatorClass();
+        this.authenticator = AuthenticatorClass.getAuthenticator();
         this.logger = new LogManagerClass();
         accessController = new AccessControllerClass();
         super.init();
@@ -55,12 +55,11 @@ public class ChangeUsersServlet extends HttpServlet {
         String name = request.getParameter("name");
         try {
             Account account = authenticator.check_authenticated_request(request, response);
-            String operator = account.getUsername();
-            accessController.checkPermission(request, Resource.CHANGE_USERS, Operation.READ, operator);
+            accessController.checkPermission(request, Resource.CHANGE_USERS, Operation.PUT, account);
             String pwd1 = PasswordUtils.hashPassword(request.getParameter("pwd1"));
             String pwd2 = PasswordUtils.hashPassword(request.getParameter("pwd2"));
             authenticator.changePwd(name, pwd1, pwd2);
-            logger.authenticated(CHANCE_PASSWORD, name, operator);
+            logger.authenticated(CHANCE_PASSWORD, name, account.getUsername());
             response.setStatus(HttpServletResponse.SC_OK);
             print(response, "Password changed", "main_page.html");
         } catch (AuthenticationError e) {
@@ -88,9 +87,7 @@ public class ChangeUsersServlet extends HttpServlet {
         String name = request.getParameter("name");
         try {
             Account acc = authenticator.check_authenticated_request(request, response);
-            String operator = acc.getUsername();
-            accessController.checkPermission(request, Resource.CHANGE_USERS, Operation.READ, operator);
-
+            accessController.checkPermission(request, Resource.CHANGE_USERS, Operation.DELETE, acc);
             authenticator.deleteAccount(name);
             logger.authenticated(DELETE, name, acc.getUsername());
             response.setStatus(HttpServletResponse.SC_OK);

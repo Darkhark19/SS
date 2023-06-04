@@ -1,6 +1,5 @@
 package database;
 
-import authenticator.utils.PasswordUtils;
 import database.exceptions.AccountNotFountException;
 import models.*;
 
@@ -32,6 +31,9 @@ public class DatabaseOperator {
         PreparedStatement pstmt2 = connection.prepareStatement(sql2);
         pstmt2.setString(1, name);
         pstmt2.executeUpdate();
+        createUserRole(name,Role.USER);
+
+
     }
 
     public void deleteAccount(String name) throws SQLException, AccountNotFountException {
@@ -205,18 +207,42 @@ public class DatabaseOperator {
 
     public static void main(String[] args) throws Exception {
         DatabaseOperator db = new DatabaseOperator();
-//        Role admin = Role.ADMIN;
-//        Role user = Role.USER;
-//        db.createPermission(Role.USER, Resource.PAGES, Operation.READ);
-//        db.createPermission(Role.USER, Resource.FOLLOWERS, Operation.WRITE);
-//        db.createPermission(Role.USER, Resource.FOLLOWERS, Operation.PUT);
-//
-//
-//        db.createPermission(admin, Resource.PAGES, Operation.WRITE);
-//        db.createPermission(admin, Resource.USERS, Operation.WRITE);
-//        db.createPermission(admin, Resource.CHANGE_USERS, Operation.READ);
-//        db.createPermission(admin, Resource.CHANGE_USERS, Operation.WRITE);
-        db.createAccount("root", PasswordUtils.hashPassword("1234"));
+        Role admin = Role.ADMIN;
+        Role user = Role.USER;
+        //ADMIN Permissions
+        db.createRole(user.getDescription());
+        db.createPermission(admin, Resource.USERS, Operation.WRITE);
+        db.createPermission(admin,Resource.USERS,Operation.READ);
+        db.createPermission(admin, Resource.CHANGE_USERS, Operation.DELETE);
+
+        db.createPermission(admin,Resource.MANAGE_PAGE,Operation.DELETE);
+        db.createPermission(admin,Resource.MANAGE_PAGE,Operation.WRITE);
+
+        //USER Permissions
+        db.createPermission(user, Resource.CHANGE_USERS, Operation.PUT);
+
+        db.createPermission(user,Resource.PAGES,Operation.READ);
+        db.createPermission(user,Resource.PAGES,Operation.PUT);
+        db.createPermission(user,Resource.FOLLOWERS,Operation.WRITE);
+        db.createPermission(user,Resource.FOLLOWERS,Operation.PUT);
+        db.createPermission(user, Resource.MANAGE_POSTS, Operation.WRITE);
+        db.createPermission(user,Resource.MANAGE_POSTS,Operation.DELETE);
+        db.createPermission(user,Resource.POSTS,Operation.READ);
+        db.createPermission(user,Resource.POSTS,Operation.PUT);
+        db.createPermission(user,Resource.LIKES,Operation.LIKE);
+        db.createPermission(user,Resource.LIKES,Operation.UNLIKE);
+
+        db.createUserRole("root", admin);
+        db.createUserRole("root", user);
+
+        /*db.createPermission(user, Resource.PAGES, Operation.READ);
+        db.createPermission(user, Resource.FOLLOWERS, Operation.WRITE);
+        db.createPermission(user, Resource.FOLLOWERS, Operation.PUT);
+
+
+        db.createPermission(admin, Resource.PAGES, Operation.WRITE);
+
+        db.createAccount("root", PasswordUtils.hashPassword("1234"));*/
     }
 
 

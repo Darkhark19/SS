@@ -32,7 +32,7 @@ public class ManageUsersServlet extends HttpServlet {
 
     @Override
     public void init() throws ServletException {
-        this.authenticator = new AuthenticatorClass();
+        this.authenticator = AuthenticatorClass.getAuthenticator();
         accessController = new AccessControllerClass();
         this.logger = new LogManagerClass();
         super.init();
@@ -51,8 +51,7 @@ public class ManageUsersServlet extends HttpServlet {
         String pwd2 = PasswordUtils.hashPassword(request.getParameter("pwd2"));
         try {
             Account account = authenticator.check_authenticated_request(request, response);
-            accessController.checkPermission(request, Resource.USERS, Operation.WRITE, account.getUsername());
-
+            accessController.checkPermission(request, Resource.USERS, Operation.WRITE, account);
             authenticator.createAccount(name, pwd1, pwd2);
             logger.authenticated(CREATE, name, account.getUsername());
             response.setStatus(HttpServletResponse.SC_CREATED);
@@ -95,6 +94,7 @@ public class ManageUsersServlet extends HttpServlet {
         String name = request.getParameter("name");
         try {
             Account acc = authenticator.check_authenticated_request(request, response);
+            accessController.checkPermission(request, Resource.USERS, Operation.READ, acc);
             // send the account back to the client
             Account account = authenticator.getAccount(name);
             // send account back to client
@@ -124,6 +124,9 @@ public class ManageUsersServlet extends HttpServlet {
             response.sendRedirect("main_page.html");
         } catch (IOException e) {
             throw new RuntimeException(e);
+        } catch (AccessControlError e) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.sendRedirect("main_page.html");
         }
     }
 

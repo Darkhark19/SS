@@ -22,5 +22,4 @@ public interface Authenticator {
     Account check_authenticated_request(HttpServletRequest request, HttpServletResponse response) throws AuthenticationError;
 
 
-
 }

@@ -28,10 +28,21 @@ public class SN {
 
     static SN theapp = null;
 
-    public SN() throws Exception {
+    private SN() throws Exception {
         connect();
         stmt = theconnection.createStatement();
     }
+    public static SN getInstance(){
+        if(theapp == null){
+            try {
+                theapp = new SN();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return theapp;
+    }
+
 
     // Utils
 
@@ -313,6 +324,7 @@ public class SN {
         }
         return lpages;
     }
+
 
 
 }

@@ -30,7 +30,7 @@ public class ManageRolesServlet extends HttpServlet {
 
     @Override
     public void init() throws ServletException {
-        this.authenticator = new AuthenticatorClass();
+        this.authenticator = AuthenticatorClass.getAuthenticator();
         accessController = new AccessControllerClass();
         this.logger = new LogManagerClass();
         super.init();

@@ -6,22 +6,23 @@
 </head>
 <body>
 <h1>Create page</h1>
-<form action="pages" method="POST">
-    <label for="title">Page:</label>
-    <input type="text" id="title" name="title"><br><br>
-    <label for="pic">Pic:</label>
-    <input type="text" id="pic" name="pic"><br><br>
-    <label for="username">Username:</label>
-    <input type="text" id="username" name="username"><br><br>
+<form action="manage_page" method="POST">
+    <label for="page_title">Page:</label>
+    <input type="text" id="page_title" name="page_title"><br><br>
+    <label for="page_pic">Pic:</label>
+    <input type="text" id="page_pic" name="page_pic"><br><br>
+    <label for="name">Username:</label>
+    <input type="text" id="name" name="name"><br><br>
     <label for="email">Email:</label>
     <input type="text" id="email" name="email"><br><br>
     <input type="submit" value="Submit">
 </form>
 <br>
 <h1>Delete page</h1>
-<form action="pages" method="GET">
-    <label for="delete_title">Page:</label>
-    <input type="text" id="delete_title" name="delete_title"><br><br>
+<form action="manage_page" method="GET">
+    <label for="page_id">Page:</label>
+    <input type="text" id="page_id" name="page_id"><br><br>
     <input type="submit" value="Submit">
+</form>
 </body>
 </html>

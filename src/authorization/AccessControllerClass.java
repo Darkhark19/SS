@@ -1,15 +1,21 @@
 package authorization;
 
+import authenticator.utils.JWTUtils;
 import database.DatabaseOperator;
+import database.SN;
 import database.exceptions.AccessControlError;
+import database.exceptions.NotOwnerException;
+import database.exceptions.PageNotFollowed;
 import models.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.sql.SQLException;
 import java.util.*;
 
 public class AccessControllerClass implements AccessController {
 
+    private static final String CAPABILITY = "capability";
     private final DatabaseOperator db;
 
     public AccessControllerClass() {
@@ -58,6 +64,82 @@ public class AccessControllerClass implements AccessController {
         }
     }
 
+    @Override
+    public PageObject checkPage(int page, Account acc) throws NotOwnerException, SQLException {
+        PageObject p = SN.getInstance().getPage(page);
+        if (!p.getUserId().equals(acc.getUsername()))
+            throw new NotOwnerException();
+        return p;
+    }
+
+    public PostObject checkPost(int post, Account acc) throws NotOwnerException, SQLException {
+        PostObject p = SN.getInstance().getPost(post);
+        checkPage(p.getPageId(), acc);
+        return p;
+    }
+
+    @Override
+    public List<PostObject> checkPagePosts(int page, Account acc) throws SQLException, PageNotFollowed {
+        List<PageObject> pages = SN.getInstance().getfollowers(page);
+        for (PageObject p : pages) {
+            if (p.getUserId().equals(acc.getUsername()))
+                return SN.getInstance().getPagePosts(page);
+        }
+        throw new PageNotFollowed();
+
+    }
+
+    @Override
+    public void updatePost(int postId, String post_text, Account account) throws NotOwnerException, SQLException {
+        PostObject p = checkPost(postId, account);
+        p.setPostText(post_text);
+        SN.getInstance().updatePost(p);
+
+    }
+
+    @Override
+    public void updatePage(int pageId, String pageTitle, String pagePic, String email, String user, Account account) throws NotOwnerException, SQLException {
+        PageObject p = checkPage(pageId, account);
+        if (pageTitle != null)
+            p.setPageTitle(pageTitle);
+        if (pagePic != null)
+            p.setPagePic(pagePic);
+        if (email != null)
+            p.setEmail(email);
+        if (user != null)
+            p.setUserId(user);
+        SN.getInstance().updatePage(p);
+    }
+
+    @Override
+    public void likePost(int postId, Account account) throws SQLException, PageNotFollowed {
+        SN app = SN.getInstance();
+        PostObject post = app.getPost(postId);
+        List<PageObject> followers = app.getfollowers(post.getPageId());
+        for (PageObject p : followers) {
+            if (p.getUserId().equals(account.getUsername())) {
+                app.like(postId, post.getPageId());
+                return;
+            }
+        }
+        throw new PageNotFollowed();
+    }
+
+    @Override
+    public void unlikePost(int postId, Account account) throws SQLException, PageNotFollowed {
+        SN app = SN.getInstance();
+        PostObject post = app.getPost(postId);
+        List<PageObject> followers = app.getfollowers(post.getPageId());
+        for (PageObject p : followers) {
+            if (p.getUserId().equals(account.getUsername())) {
+                app.unlike(postId, post.getPageId());
+                return;
+            }
+        }
+        throw new PageNotFollowed();
+
+    }
+
 
     @Override
     public void grantPermission(Role role, Resource res, Operation op) {
@@ -84,22 +166,22 @@ public class AccessControllerClass implements AccessController {
         Roles userRoles = this.getRoles(user);
         try {
             Map<Resource, Set<Operation>> resultMap = new HashMap<>();
-            for(Role role : userRoles.getRoles()) {
+            for (Role role : userRoles.getRoles()) {
                 Map<Resource, List<Operation>> permissions = db.getPermissions(role);
-                for(Map.Entry<Resource,List<Operation>> e: permissions.entrySet()){
-                   Set<Operation> ops = resultMap.get(e.getKey());
-                   if(ops == null)
-                       ops = new HashSet<>();
-                   ops.addAll(e.getValue());
-                   resultMap.put(e.getKey(), ops);
+                for (Map.Entry<Resource, List<Operation>> e : permissions.entrySet()) {
+                    Set<Operation> ops = resultMap.get(e.getKey());
+                    if (ops == null)
+                        ops = new HashSet<>();
+                    ops.addAll(e.getValue());
+                    resultMap.put(e.getKey(), ops);
                 }
             }
             List<Capability> result = new ArrayList<>();
 
-            for(Map.Entry<Resource, Set<Operation>> e: resultMap.entrySet()){
+            for (Map.Entry<Resource, Set<Operation>> e : resultMap.entrySet()) {
                 Capability cap = new Capability(user.getUsername());
-                Date expire = new Date(System.currentTimeMillis()  + (10 * 60 * 1000));
-                e.getValue().forEach(value -> result.add(cap.makeKey(e.getKey(), value,expire)));
+                Date expire = new Date(System.currentTimeMillis() + (10 * 60 * 1000));
+                e.getValue().forEach(value -> result.add(cap.makeKey(e.getKey(), value, expire)));
             }
             return result;
         } catch (SQLException e) {
@@ -108,9 +190,24 @@ public class AccessControllerClass implements AccessController {
     }
 
     @Override
-    public void checkPermission(HttpServletRequest request, Resource res, Operation op, String username) throws AccessControlError {
-
-
+    public void checkPermission(HttpServletRequest request, Resource res, Operation op, Account acc) throws AccessControlError {
+        HttpSession session = request.getSession();
+        if (acc == null)
+            throw new AccessControlError();
+        Enumeration<String> keys = session.getAttributeNames();
+        while (keys.hasMoreElements()) {
+            String key = keys.nextElement();
+            if (key.contains(CAPABILITY)) {
+                String token = session.getAttribute(key).toString();
+                Capability cap = JWTUtils.parseCapabilityJWT(token, session.getId(), acc.getUsername());
+                if (cap == null) {
+                    session.removeAttribute(key);
+                } else if (cap.checkPermission(res, op, acc.getUsername()))
+                    return;
+            }
+        }
+        throw new AccessControlError();
     }
+
 }
 

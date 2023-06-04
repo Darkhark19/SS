@@ -105,7 +105,7 @@ public class JWTUtils {
         }
         catch (JwtException e) {
             e.printStackTrace();
-            return  null;// invalid token or expired
+            return null;// invalid token or expired
         }
     }
 

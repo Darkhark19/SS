@@ -23,8 +23,16 @@ public class AuthenticatorClass implements Authenticator {
 
     private final DatabaseOperator db;
 
-    public AuthenticatorClass() {
+    private static Authenticator authenticator;
+
+    private AuthenticatorClass() {
         this.db = new DatabaseOperator();
+    }
+
+    public static Authenticator getAuthenticator() {
+        if(authenticator == null)
+            authenticator = new AuthenticatorClass();
+        return authenticator;
     }
 
     @Override

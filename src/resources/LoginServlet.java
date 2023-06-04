@@ -26,12 +26,13 @@ import java.util.List;
 @WebServlet("/login")
 public class LoginServlet extends HttpServlet {
 
+    private static final String CAPABILITY = "capability";
     private Authenticator authenticator;
     private LogManagerClass logger;
     private AccessController accessController;
     @Override
     public void init() throws ServletException {
-        this.authenticator = new AuthenticatorClass();
+        this.authenticator = AuthenticatorClass.getAuthenticator();
         this.logger = new LogManagerClass();
         this.accessController = new AccessControllerClass();
         super.init();
@@ -110,8 +111,9 @@ public class LoginServlet extends HttpServlet {
         List<Capability> caps = accessController.createKey(user);
         int counter = 0;
         for( Capability cap : caps){
-            session.setAttribute("capability"+ counter,
+            session.setAttribute(CAPABILITY+ counter,
                     JWTUtils.createJWTPermissions(user.getUsername(),session.getId(),cap));
+            counter++;
         }
 
     }

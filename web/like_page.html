@@ -7,18 +7,14 @@
 <body>
 <h1>Like</h1>
 <form action="likes" method="POST">
-    <label for="page">Page:</label>
-    <input type="text" id="page" name="page"><br><br>
-    <label for="post">Post:</label>
-    <input type="text" id="post" name="post"><br><br>
+    <label for="postId">Like Post:</label>
+    <input type="number" id="postId" name="postId"><br><br>
     <input type="submit" value="Submit">
 </form>
 <h1>Unlike</h1>
-<form action="likes" method="POST">
-  <label for="page_unlike">Page:</label>
-  <input type="text" id="page_unlike" name="page_unlike"><br><br>
-  <label for="post_unlike">Post:</label>
-  <input type="text" id="post_unlike" name="post_unlike"><br><br>
+<form action="likes" method="GET">
+  <label for="postId_unlike">Unlike Post:</label>
+  <input type="number" id="postId_unlike" name="postId_unlike"><br><br>
   <input type="submit" value="Submit">
 </form>
 </body>
