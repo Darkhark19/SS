@@ -9,7 +9,7 @@ public enum Role {
 
     }
     public String getDescription() {
-        return this.description;
+        return this.description.toUpperCase();
     }
 
 }

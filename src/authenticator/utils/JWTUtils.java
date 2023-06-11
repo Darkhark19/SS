@@ -44,7 +44,7 @@ public class JWTUtils {
                 .setSubject(SUBJECT)
                 .setIssuer(ISSUER)
                 .setIssuedAt(new Date())
-                .addClaims(claims)
+                .setClaims(claims)
                 .setExpiration(new Date(System.currentTimeMillis() + VALIDITY))
                 .signWith(new SecretKeySpec(getPassphraseEncoded(), SIGNATURE_ALGORITHM.getJcaName()), SIGNATURE_ALGORITHM)
                 .compact();

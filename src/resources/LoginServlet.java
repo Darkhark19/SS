@@ -22,6 +22,7 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.UUID;
 
 @WebServlet("/login")
 public class LoginServlet extends HttpServlet {
@@ -109,11 +110,10 @@ public class LoginServlet extends HttpServlet {
 
     private void setCapabilities(HttpSession session, Account user) {
         List<Capability> caps = accessController.createKey(user);
-        int counter = 0;
         for( Capability cap : caps){
-            session.setAttribute(CAPABILITY+ counter,
+            UUID uuid = UUID.randomUUID();
+            session.setAttribute(CAPABILITY+ uuid,
                     JWTUtils.createJWTPermissions(user.getUsername(),session.getId(),cap));
-            counter++;
         }
 
     }

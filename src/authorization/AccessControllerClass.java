@@ -6,6 +6,7 @@ import database.SN;
 import database.exceptions.AccessControlError;
 import database.exceptions.NotOwnerException;
 import database.exceptions.PageNotFollowed;
+import database.exceptions.TimeExpiredTokenError;
 import models.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -198,15 +199,52 @@ public class AccessControllerClass implements AccessController {
         while (keys.hasMoreElements()) {
             String key = keys.nextElement();
             if (key.contains(CAPABILITY)) {
-                String token = session.getAttribute(key).toString();
-                Capability cap = JWTUtils.parseCapabilityJWT(token, session.getId(), acc.getUsername());
-                if (cap == null) {
-                    session.removeAttribute(key);
-                } else if (cap.checkPermission(res, op, acc.getUsername()))
-                    return;
+                //se token null ou se check permission retornar false
+                //ir a base de dados buscar permissoes pedidas do user
+                try {
+                    this.checkCapabilityToken(session, res, op, key, acc.getUsername());
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
             }
         }
         throw new AccessControlError();
+    }
+
+    /**
+     * Verifica se o token é válido e se o utilizador tem permissão para aceder ao recurso
+     * @param session
+     * @param res
+     * @param op
+     * @param key
+     * @param username
+     * @throws SQLException
+     * @throws AccessControlError
+     */
+    private void checkCapabilityToken(HttpSession session, Resource res, Operation op, String key, String username) throws SQLException, AccessControlError {
+        String token = session.getAttribute(key).toString();
+        Capability cap = JWTUtils.parseCapabilityJWT(token, session.getId(), username);
+        boolean isValid = true;
+        try {
+            if (cap == null) {
+                isValid = false;
+            } else if (cap.checkPermission(res, op, username))
+                return;
+        } catch (TimeExpiredTokenError e) {
+            isValid = false;
+        }
+        if (!isValid) {
+            boolean result = db.checkPermission(username, res, op);
+            if (result) {
+                UUID uuid = UUID.randomUUID();
+                cap = new Capability(username);
+                Date expire = new Date(System.currentTimeMillis() + (10 * 60 * 1000));
+                session.setAttribute(CAPABILITY+uuid, cap.makeKey(res, op, expire));
+            } else {
+                session.removeAttribute(key);
+                throw new AccessControlError();
+            }
+        }
     }
 
 }

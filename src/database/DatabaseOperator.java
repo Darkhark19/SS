@@ -205,22 +205,39 @@ public class DatabaseOperator {
         return permissions;
     }
 
+    public boolean checkPermission(String username, Resource res, Operation op) throws SQLException {
+        Roles roles = this.getUserRoles(username);
+        for(Role role: roles.getRoles()){
+            String sql = "SELECT * FROM permissions WHERE role=? AND resource=? AND operation=?";
+            PreparedStatement pstmt = connection.prepareStatement(sql);
+            pstmt.setString(1, role.getDescription());
+            pstmt.setString(2, res.getDescription());
+            pstmt.setString(3, op.getDescription());
+            ResultSet rs = pstmt.executeQuery();
+            return rs.next();
+        }
+        return false;
+    }
     public static void main(String[] args) throws Exception {
         DatabaseOperator db = new DatabaseOperator();
         Role admin = Role.ADMIN;
         Role user = Role.USER;
+
+       /* db.createRole(user.getDescription());
+        db.createRole(admin.getDescription());
+
+        db.createUserRole("root", admin);
+        db.createUserRole("root", user);*/
         //ADMIN Permissions
-        db.createRole(user.getDescription());
+       /*
         db.createPermission(admin, Resource.USERS, Operation.WRITE);
         db.createPermission(admin,Resource.USERS,Operation.READ);
         db.createPermission(admin, Resource.CHANGE_USERS, Operation.DELETE);
-
         db.createPermission(admin,Resource.MANAGE_PAGE,Operation.DELETE);
         db.createPermission(admin,Resource.MANAGE_PAGE,Operation.WRITE);
 
         //USER Permissions
         db.createPermission(user, Resource.CHANGE_USERS, Operation.PUT);
-
         db.createPermission(user,Resource.PAGES,Operation.READ);
         db.createPermission(user,Resource.PAGES,Operation.PUT);
         db.createPermission(user,Resource.FOLLOWERS,Operation.WRITE);
@@ -230,19 +247,9 @@ public class DatabaseOperator {
         db.createPermission(user,Resource.POSTS,Operation.READ);
         db.createPermission(user,Resource.POSTS,Operation.PUT);
         db.createPermission(user,Resource.LIKES,Operation.LIKE);
-        db.createPermission(user,Resource.LIKES,Operation.UNLIKE);
-
-        db.createUserRole("root", admin);
-        db.createUserRole("root", user);
-
-        /*db.createPermission(user, Resource.PAGES, Operation.READ);
-        db.createPermission(user, Resource.FOLLOWERS, Operation.WRITE);
-        db.createPermission(user, Resource.FOLLOWERS, Operation.PUT);
+        db.createPermission(user,Resource.LIKES,Operation.UNLIKE);*/
 
 
-        db.createPermission(admin, Resource.PAGES, Operation.WRITE);
-
-        db.createAccount("root", PasswordUtils.hashPassword("1234"));*/
     }
 
 

@@ -1,11 +1,12 @@
 package authorization;
 
+import database.exceptions.TimeExpiredTokenError;
 import models.Operation;
 import models.Resource;
 
 import java.util.Date;
 
-public class Capability {
+public class Capability  {
 
     private String username;
     private Resource resource;
@@ -27,10 +28,42 @@ public class Capability {
         return this;
     }
 
-    public boolean checkPermission(Resource resource, Operation op, String username){
+    public boolean checkPermission(Resource resource, Operation op, String username) throws TimeExpiredTokenError {
         if(!this.username.equals(username))
             return false;
-        return this.resource.equals(resource) && this.operation.equals(op)
-                && expireTime.after(new Date()) ;
+        else if ( expireTime.after(new Date()))
+            throw new TimeExpiredTokenError();
+        return this.resource.equals(resource) && this.operation.equals(op);
+    }
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public Resource getResource() {
+        return resource;
+    }
+
+    public void setResource(Resource resource) {
+        this.resource = resource;
+    }
+
+    public Operation getOperation() {
+        return operation;
+    }
+
+    public void setOperation(Operation operation) {
+        this.operation = operation;
+    }
+
+    public Date getExpireTime() {
+        return expireTime;
+    }
+
+    public void setExpireTime(Date expireTime) {
+        this.expireTime = expireTime;
     }
 }
