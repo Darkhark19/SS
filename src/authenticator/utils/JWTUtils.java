@@ -5,11 +5,14 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import models.Operation;
+import models.Resource;
 
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class JWTUtils {
@@ -37,13 +40,13 @@ public class JWTUtils {
 
     public static String createJWTPermissions(String username, String id, Capability cap){
         Map<String,Object> claims = new HashMap<>();
+        claims.put("jti", id); // jti is the id of the token (JWT ID), a unique identifier for the token
         claims.put("username", username);
         claims.put("capability", cap);
+        claims.put("iss", ISSUER);
+        claims.put("sub", SUBJECT);
+        claims.put("iat", new Date());
         return Jwts.builder()
-                .setId(id)
-                .setSubject(SUBJECT)
-                .setIssuer(ISSUER)
-                .setIssuedAt(new Date())
                 .setClaims(claims)
                 .setExpiration(new Date(System.currentTimeMillis() + VALIDITY))
                 .signWith(new SecretKeySpec(getPassphraseEncoded(), SIGNATURE_ALGORITHM.getJcaName()), SIGNATURE_ALGORITHM)
@@ -100,13 +103,21 @@ public class JWTUtils {
                 System.out.println("Invalid username");
                 throw new JwtException("Invalid JWT username");
             }else{
-                return (Capability) claims.get("capability");  // returns the username
+                return mapToCapability((LinkedHashMap<String, Object>) claims.get("capability"));  // returns the capability
             }
         }
         catch (JwtException e) {
             e.printStackTrace();
             return null;// invalid token or expired
         }
+    }
+
+    private static Capability mapToCapability(LinkedHashMap<String, Object> claim) {
+        Capability cap = new Capability(claim.get("username").toString());
+        cap.setOperation(Operation.valueOf(claim.get("operation").toString()));
+        cap.setResource(Resource.valueOf(claim.get("resource").toString()));
+        cap.setExpireTime(new Date((Long) claim.get("expireTime")));
+        return cap;
     }
 
     private static byte[] getPassphraseEncoded(){

@@ -146,10 +146,10 @@ public class AuthenticatorClass implements Authenticator {
             String id = session.getId();
             if (token == null)
                 throw new AuthenticationError();
-            String JWTToken = JWTUtils.parseJWT(token.toString(),id);
-            if (JWTToken == null)
+            String username = JWTUtils.parseJWT(token.toString(),id);
+            if (username == null)
                 throw new AuthenticationError();
-            Account c = db.getAccount(JWTToken);
+            Account c = db.getAccount(username);
             c.getJWT(id);
             return c;
         } catch (SQLException e) {

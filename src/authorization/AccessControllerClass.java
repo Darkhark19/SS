@@ -81,7 +81,7 @@ public class AccessControllerClass implements AccessController {
 
     @Override
     public List<PostObject> checkPagePosts(int page, Account acc) throws SQLException, PageNotFollowed {
-        List<PageObject> pages = SN.getInstance().getfollowers(page);
+        List<PageObject> pages = SN.getInstance().getFollowers(page);
         for (PageObject p : pages) {
             if (p.getUserId().equals(acc.getUsername()))
                 return SN.getInstance().getPagePosts(page);
@@ -116,7 +116,7 @@ public class AccessControllerClass implements AccessController {
     public void likePost(int postId, Account account) throws SQLException, PageNotFollowed {
         SN app = SN.getInstance();
         PostObject post = app.getPost(postId);
-        List<PageObject> followers = app.getfollowers(post.getPageId());
+        List<PageObject> followers = app.getFollowers(post.getPageId());
         for (PageObject p : followers) {
             if (p.getUserId().equals(account.getUsername())) {
                 app.like(postId, post.getPageId());
@@ -130,7 +130,7 @@ public class AccessControllerClass implements AccessController {
     public void unlikePost(int postId, Account account) throws SQLException, PageNotFollowed {
         SN app = SN.getInstance();
         PostObject post = app.getPost(postId);
-        List<PageObject> followers = app.getfollowers(post.getPageId());
+        List<PageObject> followers = app.getFollowers(post.getPageId());
         for (PageObject p : followers) {
             if (p.getUserId().equals(account.getUsername())) {
                 app.unlike(postId, post.getPageId());

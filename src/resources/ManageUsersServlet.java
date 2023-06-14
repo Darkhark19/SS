@@ -71,11 +71,10 @@ public class ManageUsersServlet extends HttpServlet {
         } catch (AuthenticationError e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.sendRedirect("index.html");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (RuntimeException e){
+        }catch (RuntimeException e){
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.sendRedirect("register.html");
         } catch (AccessControlError e) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             response.sendRedirect("main_page.html");

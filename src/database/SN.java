@@ -52,7 +52,7 @@ public class SN {
 
     // Constructor
 
-    public void doSQL(Statement stmt, String sqlcmd) throws SQLException {
+    public void doSQL(Statement stmt, String sqlcmd) {
         try {
             stmt.execute(sqlcmd);
             // System.out.println(sqlcmd + " done.");
@@ -284,18 +284,18 @@ public class SN {
                     follower_page_id + "," + followed_page_id + "," + q(status.name()) + ")");
     }
 
-    public void updatefollowsstatus(int follower_page_id, int followed_page_id, FState status)
+    public void updateFollowsStatus(int follower_page_id, int followed_page_id, FState status)
             throws SQLException {
         stmt.execute("update follower set status=" + q(status.name()) +
                 " where page_ids=" + follower_page_id + " and " +
                 "page_idd=" + followed_page_id);
     }
 
-    public FState getfollow(int follower_page_id, int followed_page_id) throws SQLException {
+    public FState getFollow(int follower_page_id, int followed_page_id) throws SQLException {
         Statement stmtl = theconnection.createStatement();
         ResultSet rs = stmtl.executeQuery(
                 "select status from follower" +
-                        " where page_ids=" + follower_page_id + " and status=\"OK\"" +
+                        " where page_ids=" + follower_page_id + " and status='OK'" +
                         " and page_idd=" + followed_page_id);
         if (rs.next()) {
             return FState.valueOf(rs.getString("status"));
@@ -303,10 +303,10 @@ public class SN {
         return FState.NONE;
     }
 
-    public List<PageObject> getfollowers(int page_id) throws SQLException {
+    public List<PageObject> getFollowers(int page_id) throws SQLException {
         List<PageObject> lpages = new ArrayList<PageObject>();
         Statement stmtl = theconnection.createStatement();
-        ResultSet rs = stmtl.executeQuery("select page_ids from follower where status=\"OK\"" + " and page_idd=" + page_id);
+        ResultSet rs = stmtl.executeQuery("select page_ids from follower where status='OK' and page_ids=" + page_id);
         while (rs.next()) {
             PageObject p = getPage(rs.getInt("page_ids"));
             lpages.add(p);
@@ -314,10 +314,10 @@ public class SN {
         return lpages;
     }
 
-    public List<PageObject> getfollowed(int page_id) throws SQLException {
+    public List<PageObject> getFollowed(int page_id) throws SQLException {
         List<PageObject> lpages = new ArrayList<PageObject>();
         Statement stmtl = theconnection.createStatement();
-        ResultSet rs = stmtl.executeQuery("select page_idd from follower where status=\"OK\"" + " and page_ids=" + page_id);
+        ResultSet rs = stmtl.executeQuery("select page_idd from follower where status='OK' and page_ids=" + page_id);
         while (rs.next()) {
             PageObject p = getPage(rs.getInt("page_idd"));
             lpages.add(p);

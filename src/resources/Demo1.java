@@ -24,23 +24,23 @@ public static void main(String[] args) throws Exception
 	PageObject r = app.newPage("joe", "joe@com", "Joe Dalton", "joe.jpg");
 	
 	app.follows(p.getPageId(),q.getPageId(),FState.PENDING); // luis follows mary (PENDING)
-	FState f = app.getfollow(p.getPageId(),q.getPageId());
+	FState f = app.getFollow(p.getPageId(),q.getPageId());
 	
-	app.updatefollowsstatus(p.getPageId(),q.getPageId(),FState.OK); // luis follows mary (OK)
-        f = app.getfollow(p.getPageId(),q.getPageId());
+	app.updateFollowsStatus(p.getPageId(),q.getPageId(),FState.OK); // luis follows mary (OK)
+        f = app.getFollow(p.getPageId(),q.getPageId());
 	
-        f = app.getfollow(p.getPageId(),p.getPageId());
+        f = app.getFollow(p.getPageId(),p.getPageId());
 
 	app.follows(p.getPageId(),r.getPageId(),FState.PENDING); // luis follows joe (PENDING)
 	
 	System.out.println("\ngetfollowed:");
-	List<PageObject> pl = app.getfollowed(p.getPageId()) ;
+	List<PageObject> pl = app.getFollowed(p.getPageId()) ;
 	for (PageObject  x : pl) { System.out.println(p.getUserId()+" follows "+x.getUserId()); };
 
-	app.updatefollowsstatus(p.getPageId(),r.getPageId(),FState.OK);
+	app.updateFollowsStatus(p.getPageId(),r.getPageId(),FState.OK);
 	
 	System.out.println("\ngetfollowed:");
-	pl = app.getfollowed(p.getPageId()) ;
+	pl = app.getFollowed(p.getPageId()) ;
 	for (PageObject  x : pl) { System.out.println(p.getUserId()+" follows "+x.getUserId()); };
 
 	

@@ -102,7 +102,7 @@ public class ManageFollowerServlet extends HttpServlet {
             Account account = authenticator.check_authenticated_request(request, response);
             accessController.checkPermission(request, Resource.FOLLOWERS, PUT, account);
             accessController.checkPage(ownerPage, account);
-            app.updatefollowsstatus(ownerPage, page, FState.OK);
+            app.updateFollowsStatus(ownerPage, page, FState.OK);
             logger.authenticated("Updated follow "+ ownerPage + " "+ page,  account.getUsername(), account.getUsername());
             response.setStatus(HttpServletResponse.SC_OK);
             PrintWriter out = response.getWriter();

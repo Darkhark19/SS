@@ -4,7 +4,7 @@ public enum Role {
     ADMIN("admin"), USER("user");
     private final String description;
 
-    private Role(String description) {
+    Role(String description) {
         this.description = description;
 
     }
