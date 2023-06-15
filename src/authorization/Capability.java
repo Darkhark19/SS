@@ -1,46 +1,27 @@
 package authorization;
 
-import database.exceptions.TimeExpiredTokenError;
 import models.Operation;
 import models.Resource;
 
 import java.util.Date;
+import java.util.List;
 
-public class Capability  {
+public class Capability {
 
-    private String username;
     private Resource resource;
-    private Operation operation;
+    private List<Operation> operations;
     private Date expireTime;
 
-    public Capability(String username){
-        this.username = username;
+    public Capability(Resource resource, List<Operation> operations) {
         this.expireTime = new Date();
-        this.resource = null;
-        operation = null;
-    }
-
-
-    public Capability makeKey(Resource resource, Operation operation, Date expireTime){
         this.resource = resource;
-        this.operation = operation;
+        this.operations = operations;
+    }
+
+    public Capability(Resource resource, List<Operation> operations, Date expireTime) {
         this.expireTime = expireTime;
-        return this;
-    }
-
-    public boolean checkPermission(Resource resource, Operation op, String username) throws TimeExpiredTokenError {
-        if(!this.username.equals(username))
-            return false;
-        else if ( expireTime.after(new Date()))
-            throw new TimeExpiredTokenError();
-        return this.resource.equals(resource) && this.operation.equals(op);
-    }
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
+        this.resource = resource;
+        this.operations = operations;
     }
 
     public Resource getResource() {
@@ -51,12 +32,12 @@ public class Capability  {
         this.resource = resource;
     }
 
-    public Operation getOperation() {
-        return operation;
+    public List<Operation> getOperations() {
+        return operations;
     }
 
-    public void setOperation(Operation operation) {
-        this.operation = operation;
+    public void setOperation(List<Operation> operations) {
+        this.operations = operations;
     }
 
     public Date getExpireTime() {

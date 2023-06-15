@@ -1,6 +1,7 @@
 package authorization;
 
 import database.exceptions.AccessControlError;
+import database.exceptions.AuthenticationError;
 import database.exceptions.NotOwnerException;
 import database.exceptions.PageNotFollowed;
 import models.*;
@@ -15,15 +16,15 @@ public interface AccessController {
 
     void setRole(Account user, Role role);
 
-    Roles getRoles(Account user);
+    List<Role> getRoles(Account user);
 
     void grantPermission(Role role, Resource res, Operation op);
 
     void revokePermission(Role role, Resource res, Operation op);
 
-    List<Capability> createKey(Account user);
+    List<Capability> makeKey(List<Role> roles);
 
-    void checkPermission(HttpServletRequest request, Resource res, Operation op, Account acc) throws AccessControlError;
+    void checkPermission(List<Capability> capabilities, Resource res, Operation op, Account acc) throws AccessControlError;
 
     Role getRole(String roleId);
 
@@ -39,6 +40,6 @@ public interface AccessController {
 
     void likePost(int postId, Account account) throws SQLException, PageNotFollowed;
     void unlikePost(int postId, Account account) throws SQLException, PageNotFollowed;
-
+    List<Capability> getCapabilities(HttpServletRequest request, String username) throws AuthenticationError;
 
 }

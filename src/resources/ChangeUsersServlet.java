@@ -7,6 +7,7 @@ import authenticator.LogManagerClass;
 import authenticator.utils.PasswordUtils;
 import authorization.AccessController;
 import authorization.AccessControllerClass;
+import authorization.Capability;
 import database.exceptions.AccessControlError;
 import database.exceptions.AccountNotFountException;
 import database.exceptions.AuthenticationError;
@@ -22,6 +23,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
 
 @WebServlet("/change_users")
 public class ChangeUsersServlet extends HttpServlet {
@@ -32,11 +34,8 @@ public class ChangeUsersServlet extends HttpServlet {
     private static final String LOGIN_PAGE = "'index.html'";
     private static final String CHANCE_PASSWORD = "Password changed";
     private static final String CHANGE_PASSWORD_PAGE = "'change_pwd_page.html'";
-
     private static final String NOT_FOUND = "Account not found";
-
     private Authenticator authenticator;
-
     private AccessController accessController;
     private LogManager logger;
 
@@ -55,7 +54,8 @@ public class ChangeUsersServlet extends HttpServlet {
         String name = request.getParameter("name");
         try {
             Account account = authenticator.check_authenticated_request(request, response);
-            accessController.checkPermission(request, Resource.CHANGE_USERS, Operation.PUT, account);
+            List<Capability> capabilities = accessController.getCapabilities(request, account.getUsername());
+            accessController.checkPermission(capabilities, Resource.CHANGE_USERS, Operation.PUT, account);
             String pwd1 = PasswordUtils.hashPassword(request.getParameter("pwd1"));
             String pwd2 = PasswordUtils.hashPassword(request.getParameter("pwd2"));
             authenticator.changePwd(name, pwd1, pwd2);
@@ -86,10 +86,11 @@ public class ChangeUsersServlet extends HttpServlet {
                       HttpServletResponse response) throws IOException {
         String name = request.getParameter("name");
         try {
-            Account acc = authenticator.check_authenticated_request(request, response);
-            accessController.checkPermission(request, Resource.CHANGE_USERS, Operation.DELETE, acc);
+            Account account = authenticator.check_authenticated_request(request, response);
+            List<Capability> capabilities = accessController.getCapabilities(request, account.getUsername());
+            accessController.checkPermission(capabilities, Resource.CHANGE_USERS, Operation.DELETE, account);
             authenticator.deleteAccount(name);
-            logger.authenticated(DELETE, name, acc.getUsername());
+            logger.authenticated(DELETE, name, account.getUsername());
             response.setStatus(HttpServletResponse.SC_OK);
             print(response, "Account Deleted", "main_page.html");
 
