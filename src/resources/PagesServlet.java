@@ -6,7 +6,6 @@ import authenticator.LogManager;
 import authenticator.LogManagerClass;
 import authorization.AccessController;
 import authorization.AccessControllerClass;
-import authorization.Capability;
 import database.SN;
 import database.exceptions.AccessControlError;
 import database.exceptions.AuthenticationError;
@@ -57,9 +56,8 @@ public class PagesServlet extends HttpServlet {
         String email = request.getParameter("email");
         try {
             Account account = authenticator.check_authenticated_request(request, response);
-            List<Capability> capabilities = accessController.getCapabilities(request, account.getUsername());
-            accessController.checkPermission(capabilities, Resource.PAGES, UPDATE, account);
-            accessController.updatePage(pageId, pageTitle, pagePic, email, user, account);
+            accessController.checkPermission(request, Resource.PAGES, UPDATE, account);
+            accessController.updatePage(pageId,pageTitle ,pagePic,email,user, account);
             logger.authenticated("Update page: " + pageId, user, account.getUsername());
             response.setStatus(HttpServletResponse.SC_NO_CONTENT);
             PrintWriter out = response.getWriter();
@@ -88,9 +86,8 @@ public class PagesServlet extends HttpServlet {
                       HttpServletResponse response) throws IOException {
         try {
             Account account = authenticator.check_authenticated_request(request, response);
-            List<Capability> capabilities = accessController.getCapabilities(request, account.getUsername());
-            accessController.checkPermission(capabilities, Resource.PAGES, GET, account);
-            List<PageObject> pages = app.getAllPages();
+            accessController.checkPermission(request, Resource.PAGES, GET, account);
+            List<PageObject> pages = app.getAllPages();;
             logger.authenticated("Get pages ", account.getUsername(), account.getUsername());
             response.setStatus(HttpServletResponse.SC_OK);
             PrintWriter out = response.getWriter();

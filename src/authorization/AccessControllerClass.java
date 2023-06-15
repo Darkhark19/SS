@@ -4,19 +4,19 @@ import authenticator.utils.JWTUtils;
 import database.DatabaseOperator;
 import database.SN;
 import database.exceptions.AccessControlError;
-import database.exceptions.AuthenticationError;
 import database.exceptions.NotOwnerException;
 import database.exceptions.PageNotFollowed;
+import database.exceptions.TimeExpiredTokenError;
 import models.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class AccessControllerClass implements AccessController {
+
+    private static final String CAPABILITY = "capability";
     private final DatabaseOperator db;
 
     public AccessControllerClass() {
@@ -46,7 +46,7 @@ public class AccessControllerClass implements AccessController {
     }
 
     @Override
-    public List<Role> getRoles(Account user) {
+    public Roles getRoles(Account user) {
         try {
             return db.getUserRoles(user.getUsername());
         } catch (SQLException e) {
@@ -141,6 +141,7 @@ public class AccessControllerClass implements AccessController {
 
     }
 
+
     @Override
     public void grantPermission(Role role, Resource res, Operation op) {
         try {
@@ -162,47 +163,89 @@ public class AccessControllerClass implements AccessController {
     }
 
     @Override
-    public List<Capability> makeKey(List<Role> roles) {
-        List<Capability> result = new ArrayList<>();
+    public List<Capability> createKey(Account user) {
+        Roles userRoles = this.getRoles(user);
         try {
-            for (Role r : roles) {
-                Map<Resource, List<Operation>> permissions = db.getPermissions(r);
-                for (Resource res : permissions.keySet()) {
-                    result.add(new Capability(res, permissions.get(res)));
+            Map<Resource, Set<Operation>> resultMap = new HashMap<>();
+            for (Role role : userRoles.getRoles()) {
+                Map<Resource, List<Operation>> permissions = db.getPermissions(role);
+                for (Map.Entry<Resource, List<Operation>> e : permissions.entrySet()) {
+                    Set<Operation> ops = resultMap.get(e.getKey());
+                    if (ops == null)
+                        ops = new HashSet<>();
+                    ops.addAll(e.getValue());
+                    resultMap.put(e.getKey(), ops);
                 }
             }
+            List<Capability> result = new ArrayList<>();
 
-        } catch (SQLException ex) {
-            throw new RuntimeException(ex);
-        }
-        return result;
-    }
-
-    @Override
-    public void checkPermission(List<Capability> capabilities, Resource res, Operation op, Account acc) throws AccessControlError {
-        boolean hasPermission = false;
-        for (Capability c : capabilities) {
-            if (c.getResource().equals(res)) {
-                for (Operation o : c.getOperations()) {
-                    if (o.equals(op)) {
-                        hasPermission = true;
-                        break;
-                    }
-                }
+            for (Map.Entry<Resource, Set<Operation>> e : resultMap.entrySet()) {
+                Capability cap = new Capability(user.getUsername());
+                Date expire = new Date(System.currentTimeMillis() + (10 * 60 * 1000));
+                e.getValue().forEach(value -> result.add(cap.makeKey(e.getKey(), value, expire)));
             }
-            if (!hasPermission)
-                throw new AccessControlError();
+            return result;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 
     @Override
-    public List<Capability> getCapabilities(HttpServletRequest request, String username) throws AuthenticationError {
+    public void checkPermission(HttpServletRequest request, Resource res, Operation op, Account acc) throws AccessControlError {
         HttpSession session = request.getSession();
-        Object token = session.getAttribute(JWTUtils.JWT_CAPABILITIES);
-        String id = session.getId();
-        if (token == null)
-            throw new AuthenticationError();
-        return JWTUtils.parseCapabilityJWT(token.toString(), id, username);
+        if (acc == null)
+            throw new AccessControlError();
+        Enumeration<String> keys = session.getAttributeNames();
+        while (keys.hasMoreElements()) {
+            String key = keys.nextElement();
+            if (key.contains(CAPABILITY)) {
+                //se token null ou se check permission retornar false
+                //ir a base de dados buscar permissoes pedidas do user
+                try {
+                    this.checkCapabilityToken(session, res, op, key, acc.getUsername());
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+        throw new AccessControlError();
     }
+
+    /**
+     * Verifica se o token é válido e se o utilizador tem permissão para aceder ao recurso
+     * @param session
+     * @param res
+     * @param op
+     * @param key
+     * @param username
+     * @throws SQLException
+     * @throws AccessControlError
+     */
+    private void checkCapabilityToken(HttpSession session, Resource res, Operation op, String key, String username) throws SQLException, AccessControlError {
+        String token = session.getAttribute(key).toString();
+        Capability cap = JWTUtils.parseCapabilityJWT(token, session.getId(), username);
+        boolean isValid = true;
+        try {
+            if (cap == null) {
+                isValid = false;
+            } else if (cap.checkPermission(res, op, username))
+                return;
+        } catch (TimeExpiredTokenError e) {
+            isValid = false;
+        }
+        if (!isValid) {
+            boolean result = db.checkPermission(username, res, op);
+            if (result) {
+                UUID uuid = UUID.randomUUID();
+                cap = new Capability(username);
+                Date expire = new Date(System.currentTimeMillis() + (10 * 60 * 1000));
+                session.setAttribute(CAPABILITY+uuid, cap.makeKey(res, op, expire));
+            } else {
+                session.removeAttribute(key);
+                throw new AccessControlError();
+            }
+        }
+    }
+
 }
 

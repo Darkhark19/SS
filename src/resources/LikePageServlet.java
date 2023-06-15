@@ -7,7 +7,6 @@ import authenticator.LogManager;
 import authenticator.LogManagerClass;
 import authorization.AccessController;
 import authorization.AccessControllerClass;
-import authorization.Capability;
 import database.exceptions.AccessControlError;
 import database.exceptions.AuthenticationError;
 import database.exceptions.PageNotFollowed;
@@ -23,7 +22,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.SQLException;
-import java.util.List;
 
 @WebServlet("/likes")
 public class LikePageServlet extends HttpServlet {
@@ -33,7 +31,6 @@ public class LikePageServlet extends HttpServlet {
     private AccessController accessController;
     private Authenticator authenticator;
     private LogManager logger;
-
     @Override
     public void init() throws ServletException {
         this.authenticator = AuthenticatorClass.getAuthenticator();
@@ -44,8 +41,7 @@ public class LikePageServlet extends HttpServlet {
 
     /**
      * Post like.
-     *
-     * @param request  The request object.
+     * @param request The request object.
      * @param response The response object.
      */
     @Override
@@ -54,29 +50,28 @@ public class LikePageServlet extends HttpServlet {
         int postId = Integer.parseInt(request.getParameter("postId"));
         try {
             Account account = authenticator.check_authenticated_request(request, response);
-            List<Capability> capabilities = accessController.getCapabilities(request, account.getUsername());
-            accessController.checkPermission(capabilities, Resource.LIKES, LIKE, account);
+            accessController.checkPermission(request, Resource.LIKES, LIKE, account);
             accessController.likePost(postId, account);
-            logger.authenticated("Like post " + postId, account.getUsername(), account.getUsername());
+            logger.authenticated("Like post "+ postId,  account.getUsername(), account.getUsername());
             response.setStatus(HttpServletResponse.SC_OK);
             PrintWriter out = response.getWriter();
             response.setContentType("text/html");
-            out.println("Post like:" + postId);
+            out.println("Post like:"+ postId);
             out.println("<br/>");
             out.println("<a href='main_page.html'>Back</a>");
             out.close();
         } catch (AuthenticationError e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.sendRedirect("index.html");
-        } catch (IOException | SQLException e) {
+        } catch (IOException | SQLException  e) {
             throw new RuntimeException(e);
-        } catch (RuntimeException e) {
+        } catch (RuntimeException e){
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         } catch (AccessControlError e) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             response.sendRedirect("main_page.html");
-        } catch (PageNotFollowed e) {
+        } catch ( PageNotFollowed e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             response.sendRedirect("main_page.html");
         }
@@ -85,8 +80,7 @@ public class LikePageServlet extends HttpServlet {
 
     /**
      * Post unlike .
-     *
-     * @param request  The request object.
+     * @param request The request object.
      * @param response The response object.
      */
     @Override
@@ -95,14 +89,13 @@ public class LikePageServlet extends HttpServlet {
         int postId = Integer.parseInt(request.getParameter("postId_unlike"));
         try {
             Account account = authenticator.check_authenticated_request(request, response);
-            List<Capability> capabilities = accessController.getCapabilities(request, account.getUsername());
-            accessController.checkPermission(capabilities, Resource.LIKES, UNLIKE, account);
+            accessController.checkPermission(request, Resource.LIKES, UNLIKE, account);
             accessController.unlikePost(postId, account);
-            logger.authenticated("Unike post " + postId, account.getUsername(), account.getUsername());
+            logger.authenticated("Unike post "+ postId,  account.getUsername(), account.getUsername());
             response.setStatus(HttpServletResponse.SC_OK);
             PrintWriter out = response.getWriter();
             response.setContentType("text/html");
-            out.println("Post unlike:" + postId);
+            out.println("Post unlike:"+ postId);
             out.println("<br/>");
             out.println("<a href='main_page.html'>Back</a>");
             out.close();
@@ -111,7 +104,7 @@ public class LikePageServlet extends HttpServlet {
             response.sendRedirect("index.html");
         } catch (IOException | SQLException e) {
             throw new RuntimeException(e);
-        } catch (RuntimeException e) {
+        } catch (RuntimeException e){
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         } catch (AccessControlError e) {

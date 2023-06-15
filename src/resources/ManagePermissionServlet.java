@@ -26,8 +26,6 @@ public class ManagePermissionServlet{/* extends HttpServlet {
         String operation = request.getParameter("operation");
         try{
             Account account = authenticator.check_authenticated_request(request, response);
-            List<Capability> capabilities = accessController.getCapabilities(request, account.getUsername());
-            accessController.checkPermission(capabilities, Resource.PERMISSIONS, GRANT, account);
             Role r = accessController.getRole(role);
             //accessController.checkPermission();
             accessController.grantPermission(r, Resource.getResource(resource), Operation.getOperation(operation));
@@ -55,8 +53,6 @@ public class ManagePermissionServlet{/* extends HttpServlet {
         String name = request.getParameter("name");
         try{
             Account account = authenticator.check_authenticated_request(request, response);
-            List<Capability> capabilities = accessController.getCapabilities(request, account.getUsername());
-            accessController.checkPermission(capabilities, Resource.PERMISSIONS, GRANT, account);
             Role role = accessController.getRole(r);
             accessController.setRole(account,role);
             logger.authenticated(REVOKE, r, name);

@@ -7,15 +7,11 @@ import authenticator.LogManager;
 import authenticator.LogManagerClass;
 import authorization.AccessController;
 import authorization.AccessControllerClass;
-import authorization.Capability;
 import database.SN;
 import database.exceptions.AccessControlError;
 import database.exceptions.AuthenticationError;
 import database.exceptions.NotOwnerException;
-import models.Account;
-import models.Operation;
-import models.PostObject;
-import models.Resource;
+import models.*;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -25,7 +21,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.SQLException;
-import java.util.List;
 
 @WebServlet("/manage_post")
 public class ManagePostServlet extends HttpServlet {
@@ -51,8 +46,7 @@ public class ManagePostServlet extends HttpServlet {
 
     /**
      * Create a new post for page.
-     *
-     * @param request  The request object.
+     * @param request The request object.
      * @param response The response object.
      */
     @Override
@@ -63,17 +57,16 @@ public class ManagePostServlet extends HttpServlet {
         String text = request.getParameter("text");
         try {
             Account account = authenticator.check_authenticated_request(request, response);
-            List<Capability> capabilities = accessController.getCapabilities(request, account.getUsername());
-            accessController.checkPermission(capabilities, Resource.MANAGE_POSTS, WRITE, account);
+            accessController.checkPermission(request, Resource.MANAGE_POSTS, WRITE, account);
             accessController.checkPage(pageId, account);
-            PostObject post = app.newPost(pageId, date, text);
-            logger.authenticated("Created post ", account.getUsername(), account.getUsername());
+            PostObject post = app.newPost(pageId,date,text);
+            logger.authenticated("Created post ",  account.getUsername(), account.getUsername());
             response.setStatus(HttpServletResponse.SC_CREATED);
             PrintWriter out = response.getWriter();
             response.setContentType("text/html");
             out.println("Post Created");
-            out.println("post: " + post.getPostId());
-            out.println("name: " + account.getUsername());
+            out.println("post: "+ post.getPostId());
+            out.println("name: "+ account.getUsername());
             out.println("<br/>");
             out.println("<a href='main_page.html'>Back</a>");
             out.close();
@@ -82,7 +75,7 @@ public class ManagePostServlet extends HttpServlet {
             response.sendRedirect("index.html");
         } catch (IOException | SQLException e) {
             throw new RuntimeException(e);
-        } catch (RuntimeException e) {
+        } catch (RuntimeException e){
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         } catch (AccessControlError | NotOwnerException e) {
@@ -94,8 +87,7 @@ public class ManagePostServlet extends HttpServlet {
 
     /**
      * Delete post of user
-     *
-     * @param request  The request object.
+     * @param request The request object.
      * @param response The response object.
      */
     @Override
@@ -104,18 +96,17 @@ public class ManagePostServlet extends HttpServlet {
         int postId = Integer.parseInt(request.getParameter("postId"));
         try {
             Account account = authenticator.check_authenticated_request(request, response);
-            List<Capability> capabilities = accessController.getCapabilities(request, account.getUsername());
-            accessController.checkPermission(capabilities, Resource.PAGES, DELETE, account);
+            accessController.checkPermission(request,Resource.PAGES , DELETE, account);
             PostObject p = accessController.checkPost(postId, account);
-            app.deletePost(p);
-            logger.authenticated("Delete post: " + p.getPostId(), account.getUsername(), account.getUsername());
+            app.deletePost( p);
+            logger.authenticated("Delete post: "+ p.getPostId(),account.getUsername() , account.getUsername());
             response.setStatus(HttpServletResponse.SC_OK);
             PrintWriter out = response.getWriter();
             response.setContentType("text/html");
             out.println("Post Deleted");
-            out.println("Post:" + p.getPostId());
-            out.println("Post text:" + p.getPostText());
-            out.println("name:" + account.getUsername());
+            out.println("Post:"+ p.getPostId());
+            out.println("Post text:"+ p.getPostText());
+            out.println("name:"+ account.getUsername());
             out.println("<br/>");
             out.println("<a href='main_page.html'>Back</a>");
             out.close();
@@ -124,7 +115,7 @@ public class ManagePostServlet extends HttpServlet {
             response.sendRedirect("index.html");
         } catch (IOException | SQLException e) {
             throw new RuntimeException(e);
-        } catch (RuntimeException e) {
+        } catch (RuntimeException e){
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         } catch (AccessControlError | NotOwnerException e) {

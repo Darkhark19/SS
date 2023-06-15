@@ -7,10 +7,8 @@ import authenticator.LogManager;
 import authenticator.LogManagerClass;
 import authorization.AccessController;
 import authorization.AccessControllerClass;
-import authorization.Capability;
 import database.SN;
-import database.exceptions.AccessControlError;
-import database.exceptions.AuthenticationError;
+import database.exceptions.*;
 import models.Account;
 import models.Operation;
 import models.PageObject;
@@ -24,7 +22,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.SQLException;
-import java.util.List;
 
 @WebServlet("/manage_page")
 public class ManagePageServlet extends HttpServlet {
@@ -50,8 +47,7 @@ public class ManagePageServlet extends HttpServlet {
 
     /**
      * Create a new Page for user.
-     *
-     * @param request  The request object.
+     * @param request The request object.
      * @param response The response object.
      */
     @Override
@@ -63,16 +59,15 @@ public class ManagePageServlet extends HttpServlet {
         String page_pic = request.getParameter("page_pic");
         try {
             Account account = authenticator.check_authenticated_request(request, response);
-            List<Capability> capabilities = accessController.getCapabilities(request, account.getUsername());
-            accessController.checkPermission(capabilities, Resource.PAGES, CREATE, account);
-            app.newPage(name, email, page_title, page_pic);
+            accessController.checkPermission(request,Resource.PAGES , CREATE, account);
+            app.newPage(name,email,page_title,page_pic);
             logger.authenticated("Created page", name, account.getUsername());
             response.setStatus(HttpServletResponse.SC_CREATED);
             PrintWriter out = response.getWriter();
             response.setContentType("text/html");
             out.println("PAGE Created");
-            out.println("Page:" + page_title);
-            out.println("name:" + name);
+            out.println("Page:"+ page_title);
+            out.println("name:"+ name);
             out.println("<br/>");
             out.println("<a href='main_page.html'>Back</a>");
             out.close();
@@ -81,7 +76,7 @@ public class ManagePageServlet extends HttpServlet {
             response.sendRedirect("index.html");
         } catch (IOException | SQLException e) {
             throw new RuntimeException(e);
-        } catch (RuntimeException e) {
+        } catch (RuntimeException e){
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         } catch (AccessControlError e) {
@@ -93,8 +88,7 @@ public class ManagePageServlet extends HttpServlet {
 
     /**
      * Delete page of user
-     *
-     * @param request  The request object.
+     * @param request The request object.
      * @param response The response object.
      */
     @Override
@@ -103,17 +97,16 @@ public class ManagePageServlet extends HttpServlet {
         int page_id = Integer.parseInt(request.getParameter("page_id"));
         try {
             Account account = authenticator.check_authenticated_request(request, response);
-            List<Capability> capabilities = accessController.getCapabilities(request, account.getUsername());
-            accessController.checkPermission(capabilities, Resource.PAGES, DELETE, account);
+            accessController.checkPermission(request,Resource.PAGES , DELETE, account);
             PageObject page = app.getPage(page_id);
-            app.deletePage(page);
+            app.deletePage( page);
             logger.authenticated("Delete page", page.getUserId(), account.getUsername());
             response.setStatus(HttpServletResponse.SC_OK);
             PrintWriter out = response.getWriter();
             response.setContentType("text/html");
             out.println("Page Deleted");
-            out.println("Page:" + page.getPageTitle());
-            out.println("name:" + page.getUserId());
+            out.println("Page:"+ page.getPageTitle());
+            out.println("name:"+ page.getUserId());
             out.println("<br/>");
             out.println("<a href='main_page.html'>Back</a>");
             out.close();
@@ -122,7 +115,7 @@ public class ManagePageServlet extends HttpServlet {
             response.sendRedirect("index.html");
         } catch (IOException | SQLException e) {
             throw new RuntimeException(e);
-        } catch (RuntimeException e) {
+        } catch (RuntimeException e){
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         } catch (AccessControlError e) {

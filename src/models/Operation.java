@@ -6,13 +6,11 @@ public enum Operation {
     PUT("PUT"),
     LIKE("LIKE"),
     UNLIKE("UNLIKE"),
-    DELETE("DELETE"),
-    SET("SET"),
-    CREATE("CREATE");
+    DELETE("DELETE");
 
     private final String description;
 
-    Operation(String description) {
+    private Operation(String description) {
         this.description = description;
 
     }
@@ -22,10 +20,11 @@ public enum Operation {
     }
 
     public static Operation getOperation(String opId) {
-        try {
+        try{
             return Operation.valueOf(opId.toUpperCase());
         } catch (IllegalArgumentException e) {
             return null;
         }
+
     }
 }

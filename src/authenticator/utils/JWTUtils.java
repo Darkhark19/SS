@@ -10,26 +10,26 @@ import models.Resource;
 
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class JWTUtils {
 
     private static final String PASSPHRASE = "322ffdcd16d50546568368e50a10110c7320448b3d59b23d27f1fd14e881d9f6";
     private static final String ISSUER = "authenticator-project.fct.unl.pt";
-    public static final String SUBJECT_ACCESS = "JSON Web Token for SegSoft 2022/2023";
-    public static final String SUBJECT_CAPABILITIES = "JSON Capabilities Token for SegSoft 2022/2023";
-    private static final int VALIDITY = 1000 * 60 * 10; // 10 minutes in milliseconds
+    public static final String SUBJECT = "JSON Web Token for SegSoft 2022/2023";
+    private static final int VALIDITY = 1000 * 60 * 10 ; // 10 minutes in milliseconds
     private static final SignatureAlgorithm SIGNATURE_ALGORITHM = SignatureAlgorithm.HS256;
 
-    public static final String JWT = "jwt";
-    public static final String JWT_CAPABILITIES = "jwt_capabilities";
-
-    public static String createJWT(String username, String id) {
-        Map<String, Object> claims = new HashMap<>();
+    public static final String JWT ="jwt";
+    public static String createJWT(String username,String id) {
+        Map<String,Object> claims = new HashMap<>();
         claims.put("username", username);
         return Jwts.builder()
                 .setId(id)
-                .setSubject(SUBJECT_ACCESS)
+                .setSubject(SUBJECT)
                 .setIssuer(ISSUER)
                 .setIssuedAt(new Date())
                 .addClaims(claims)
@@ -38,16 +38,16 @@ public class JWTUtils {
                 .compact();
     }
 
-    public static String createJWTPermissions(String username, String id, List<Capability> capabilities) {
-        Map<String, Object> claims = new HashMap<>();
+    public static String createJWTPermissions(String username, String id, Capability cap){
+        Map<String,Object> claims = new HashMap<>();
+        claims.put("jti", id); // jti is the id of the token (JWT ID), a unique identifier for the token
         claims.put("username", username);
-        claims.put("capabilities", capabilities);
+        claims.put("capability", cap);
+        claims.put("iss", ISSUER);
+        claims.put("sub", SUBJECT);
+        claims.put("iat", new Date());
         return Jwts.builder()
-                .setId(id)
-                .setSubject(SUBJECT_CAPABILITIES)
-                .setIssuer(ISSUER)
-                .setIssuedAt(new Date())
-                .addClaims(claims)
+                .setClaims(claims)
                 .setExpiration(new Date(System.currentTimeMillis() + VALIDITY))
                 .signWith(new SecretKeySpec(getPassphraseEncoded(), SIGNATURE_ALGORITHM.getJcaName()), SIGNATURE_ALGORITHM)
                 .compact();
@@ -55,7 +55,6 @@ public class JWTUtils {
 
     /**
      * Parses the JWT and returns the username
-     *
      * @param jwt the JWT
      * @return username or null if invalid token or expired
      */
@@ -66,72 +65,62 @@ public class JWTUtils {
                     .build()
                     .parseClaimsJws(jwt).getBody();
             Date exp = claims.getExpiration();
-            if (exp == null || exp.before(new Date())) {
+            if(exp == null || exp.before(new Date())) {
                 System.out.println("Expired token");
                 throw new JwtException("Expired JWT token");
-            } else if (!claims.getIssuer().equals(ISSUER)) {
+            }else if(!claims.getIssuer().equals(ISSUER)) {
                 System.out.println("Invalid issuer");
                 throw new JwtException("Invalid JWT issuer");
-            } else if (!claims.getId().equals(id)) {
+            }else if(!claims.getId().equals(id)) {
                 System.out.println("Invalid id");
                 throw new JwtException("Invalid JWT id");
             } else {
                 return claims.get("username").toString();  // returns the username
             }
-        } catch (JwtException e) {
+        }
+        catch (JwtException e) {
             e.printStackTrace();
-            return null;// invalid token or expired
+            return  null;// invalid token or expired
         }
     }
-
-    public static List<Capability> parseCapabilityJWT(String jwt, String id, String username) {
+    public static Capability parseCapabilityJWT(String jwt, String id,String username) {
         try {
             Claims claims = Jwts.parserBuilder()
                     .setSigningKey(getPassphraseEncoded())
                     .build()
                     .parseClaimsJws(jwt).getBody();
             Date exp = claims.getExpiration();
-            if (exp == null || exp.before(new Date())) {
+            if(exp == null || exp.before(new Date())) {
                 System.out.println("Expired token");
                 throw new JwtException("Expired JWT token");
-            } else if (!claims.getIssuer().equals(ISSUER)) {
+            }else if(!claims.getIssuer().equals(ISSUER)) {
                 System.out.println("Invalid issuer");
                 throw new JwtException("Invalid JWT issuer");
-            } else if (!claims.getId().equals(id)) {
+            }else if(!claims.getId().equals(id)) {
                 System.out.println("Invalid id");
                 throw new JwtException("Invalid JWT id");
-            } else if (!claims.get("username").toString().equals(username)) {
+            } else if(!claims.get("username").toString().equals(username)){
                 System.out.println("Invalid username");
                 throw new JwtException("Invalid JWT username");
-            } else {
-                return mapToCapability((List<LinkedHashMap<String, Object>>) claims.get("capabilities"));  // returns the capability
+            }else{
+                return mapToCapability((LinkedHashMap<String, Object>) claims.get("capability"));  // returns the capability
             }
-        } catch (JwtException e) {
+        }
+        catch (JwtException e) {
             e.printStackTrace();
             return null;// invalid token or expired
         }
     }
 
-    private static List<Capability> mapToCapability(List<LinkedHashMap<String, Object>> claim) {
-        List<Capability> result = new LinkedList<>();
-        for (LinkedHashMap<String, Object> map : claim) {
-            String resource = (String) map.get("resource");
-            List<String> operations = (List<String>) map.get("operations");
-            Date expiration = (Date) map.get("expireTime");
-            result.add(new Capability(Resource.valueOf(resource), mapToOperationList(operations), expiration));
-        }
-        return result;
+    private static Capability mapToCapability(LinkedHashMap<String, Object> claim) {
+        Capability cap = new Capability(claim.get("username").toString());
+        cap.setOperation(Operation.valueOf(claim.get("operation").toString()));
+        cap.setResource(Resource.valueOf(claim.get("resource").toString()));
+        cap.setExpireTime(new Date((Long) claim.get("expireTime")));
+        return cap;
     }
 
-    private static List<Operation> mapToOperationList(List<String> operationsStrings) {
-        List<Operation> result = new LinkedList<>();
-        for (String operation : operationsStrings) {
-            result.add(Operation.valueOf(operation));
-        }
-        return result;
-    }
-
-    private static byte[] getPassphraseEncoded() {
+    private static byte[] getPassphraseEncoded(){
         return DatatypeConverter.parseBase64Binary(PASSPHRASE);
     }
 }

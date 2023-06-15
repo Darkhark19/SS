@@ -6,7 +6,6 @@ import authenticator.LogManager;
 import authenticator.LogManagerClass;
 import authorization.AccessController;
 import authorization.AccessControllerClass;
-import authorization.Capability;
 import database.exceptions.AccessControlError;
 import database.exceptions.AuthenticationError;
 import database.exceptions.NotOwnerException;
@@ -51,8 +50,7 @@ public class PostsServlet extends HttpServlet {
         String post_text = request.getParameter("post_text");
         try {
             Account account = authenticator.check_authenticated_request(request, response);
-            List<Capability> capabilities = accessController.getCapabilities(request, account.getUsername());
-            accessController.checkPermission(capabilities, Resource.POSTS, UPDATE, account);
+            accessController.checkPermission(request, Resource.POSTS, UPDATE, account);
             accessController.updatePost(postId, post_text, account);
             logger.authenticated("Update post: " + postId, account.getUsername(), account.getUsername());
             response.setStatus(HttpServletResponse.SC_OK);
@@ -84,8 +82,7 @@ public class PostsServlet extends HttpServlet {
         int pageId = Integer.parseInt(request.getParameter("pageId"));
         try {
             Account account = authenticator.check_authenticated_request(request, response);
-            List<Capability> capabilities = accessController.getCapabilities(request, account.getUsername());
-            accessController.checkPermission(capabilities, Resource.POSTS, GET, account);
+            accessController.checkPermission(request, Resource.POSTS, GET, account);
             List<PostObject> p = accessController.checkPagePosts(pageId, account);
             logger.authenticated("Get posts ", account.getUsername(), account.getUsername());
             response.setStatus(HttpServletResponse.SC_OK);
