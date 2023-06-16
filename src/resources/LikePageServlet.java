@@ -9,6 +9,7 @@ import authorization.AccessController;
 import authorization.AccessControllerClass;
 import database.exceptions.AccessControlError;
 import database.exceptions.AuthenticationError;
+import database.exceptions.NoPageFound;
 import database.exceptions.PageNotFollowed;
 import models.Account;
 import models.Operation;
@@ -65,11 +66,13 @@ public class LikePageServlet extends HttpServlet {
         } catch (AuthenticationError e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             AuthenticationError.authenticationError(response);
-        } catch (IOException | SQLException e) {
-            throw new RuntimeException(e);
-        } catch (RuntimeException e) {
+        } catch (IOException | SQLException | RuntimeException e) {
+            print(response, "Something went wrong.");
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        } catch (NoPageFound e) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            print(response, "You need to have a page first.");
         } catch (AccessControlError e) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             AccessControlError.accessControllerErrorOutput(response);
@@ -105,9 +108,8 @@ public class LikePageServlet extends HttpServlet {
         } catch (AuthenticationError e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             AuthenticationError.authenticationError(response);
-        } catch (IOException | SQLException e) {
-            throw new RuntimeException(e);
-        } catch (RuntimeException e) {
+        } catch (IOException | SQLException | RuntimeException e) {
+            print(response, "Something went wrong. Please try again.");
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         } catch (AccessControlError e) {
@@ -117,6 +119,15 @@ public class LikePageServlet extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             AccessControlError.accessControllerErrorOutput(response);
         }
+    }
+
+    private void print(HttpServletResponse response, String message) throws IOException {
+        PrintWriter out = response.getWriter();
+        response.setContentType("text/html");
+        out.println(message);
+        out.println("<br/>");
+        out.println("<a href=" + "like_page.html" + ">Continue</a>");
+        out.close();
     }
 
     @Override

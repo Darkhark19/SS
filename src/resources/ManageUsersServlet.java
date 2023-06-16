@@ -40,7 +40,8 @@ public class ManageUsersServlet extends HttpServlet {
 
     /**
      * Create a new account.
-     * @param request The request object.
+     *
+     * @param request  The request object.
      * @param response The response object.
      */
     @Override
@@ -58,33 +59,34 @@ public class ManageUsersServlet extends HttpServlet {
             PrintWriter out = response.getWriter();
             response.setContentType("text/html");
             out.println("Account Created");
-            out.println("Username:"+name);
+            out.println("Username:" + name);
             out.println("<br/>");
             out.println("<a href='main_page.html'>Back</a>");
             out.close();
         } catch (NameAlreadyExists e) {
             response.setStatus(HttpServletResponse.SC_CONFLICT);
-            response.sendRedirect("register.html");
-        } catch ( PasswordNotMatchException e) {
+            print(response, "Username already exists");
+        } catch (PasswordNotMatchException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.sendRedirect("register.html");
+            print(response, "Passwords don't match");
         } catch (AuthenticationError e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.sendRedirect("index.html");
-        }catch (RuntimeException e){
+        } catch (RuntimeException e) {
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.sendRedirect("register.html");
+            print(response, "Something went wrong");
         } catch (AccessControlError e) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.sendRedirect("main_page.html");
+            print(response, "Not enough permissions");
         }
     }
 
 
     /**
      * Get an account. Nao usado
-     * @param request The request object.
+     *
+     * @param request  The request object.
      * @param response The response object.
      */
     @Override
@@ -97,29 +99,28 @@ public class ManageUsersServlet extends HttpServlet {
             // send the account back to the client
             Account account = authenticator.getAccount(name);
             // send account back to client
-            logger.authenticated(GET, name,acc.getUsername());
+            logger.authenticated(GET, name, acc.getUsername());
             response.setStatus(HttpServletResponse.SC_OK);
             response.setContentType("text/html");
-            PrintWriter pwriter=response.getWriter();
+            PrintWriter pwriter = response.getWriter();
             pwriter.println("User Details Page:");
             pwriter.println("<br/>");
-            pwriter.println("Username: "+account.getUsername());
+            pwriter.println("Username: " + account.getUsername());
             pwriter.println("<br/>");
             pwriter.println("<a href='main_page.html'>Back</a>");
             pwriter.close();
-        }
-        catch (AccountNotFountException e) {
-            PrintWriter pwriter= response.getWriter();
+        } catch (AccountNotFountException e) {
+            PrintWriter pwriter = response.getWriter();
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            logger.authenticated(GET+" Error", name, "Unknown");
+            logger.authenticated(GET + " Error", name, "Unknown");
             response.setContentType("text/html");
-            pwriter.println("Username: "+name+" not found");
+            pwriter.println("Username: " + name + " not found");
             pwriter.println("<br/>");
             pwriter.println("<a href='main_page.html'>Back</a>");
             pwriter.close();
         } catch (AuthenticationError e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            logger.authenticated(GET+" Error", name, "Unknown");
+            logger.authenticated(GET + " Error", name, "Unknown");
             AuthenticationError.authenticationError(response);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -128,6 +129,15 @@ public class ManageUsersServlet extends HttpServlet {
             logger.authenticated("GET AccessControlError", name, "Unknown");
             AccessControlError.accessControllerErrorOutput(response);
         }
+    }
+
+    private void print(HttpServletResponse response, String message) throws IOException {
+        PrintWriter out = response.getWriter();
+        response.setContentType("text/html");
+        out.println(message);
+        out.println("<br/>");
+        out.println("<a href=" + "register.html" + ">Continue</a>");
+        out.close();
     }
 
     @Override

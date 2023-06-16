@@ -3,10 +3,7 @@ package authorization;
 import authenticator.utils.JWTUtils;
 import database.DatabaseOperator;
 import database.SN;
-import database.exceptions.AccessControlError;
-import database.exceptions.NotOwnerException;
-import database.exceptions.PageNotFollowed;
-import database.exceptions.TimeExpiredTokenError;
+import database.exceptions.*;
 import models.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -115,12 +112,14 @@ public class AccessControllerClass implements AccessController {
     }
 
     @Override
-    public void likePost(int postId, Account account) throws SQLException, PageNotFollowed {
+    public void likePost(int postId, Account account) throws SQLException, PageNotFollowed, NoPageFound {
         PageObject ownerPage = app.getOwnerPage(account);
+        if (ownerPage == null)
+            throw new NoPageFound();
         PostObject post = app.getPost(postId);
         List<PageObject> followers = app.getFollowed(ownerPage.getPageId());
         for (PageObject p : followers) {
-            if (p.getPageId() == post.getPageId()){
+            if (p.getPageId() == post.getPageId()) {
                 app.like(postId, post.getPageId());
                 return;
             }
@@ -144,32 +143,32 @@ public class AccessControllerClass implements AccessController {
 
     @Override
     public void createPage(String username, String email, String pageTitle, String pagePic) throws SQLException {
-        app.newPage(username,email,pageTitle,pagePic);
+        app.newPage(username, email, pageTitle, pagePic);
 
     }
 
     @Override
     public PageObject deletePage(int pageId) throws SQLException {
         PageObject page = app.getPage(pageId);
-        app.deletePage( page);
+        app.deletePage(page);
         return page;
     }
 
     @Override
     public PostObject newPost(int pageId, String date, String text, Account account) throws NotOwnerException, SQLException {
         this.checkPage(pageId, account);
-        return app.newPost(pageId,date,text);
+        return app.newPost(pageId, date, text);
     }
 
     @Override
     public List<PageObject> getPages() throws SQLException {
-         return app.getAllPages();
+        return app.getAllPages();
     }
 
     @Override
-    public PostObject deletePost(int postId,Account account) throws NotOwnerException, SQLException {
+    public PostObject deletePost(int postId, Account account) throws NotOwnerException, SQLException {
         PostObject p = this.checkPost(postId, account);
-        app.deletePost( p);
+        app.deletePost(p);
         return p;
     }
 
@@ -250,7 +249,7 @@ public class AccessControllerClass implements AccessController {
                 //se token null ou se check permission retornar false
                 //ir a base de dados buscar permissoes pedidas do user
                 try {
-                    if(this.checkCapabilityToken(session, res, op, key, acc.getUsername())) {
+                    if (this.checkCapabilityToken(session, res, op, key, acc.getUsername())) {
                         hasPermission = true;
                         break;
                     }
@@ -259,12 +258,13 @@ public class AccessControllerClass implements AccessController {
                 }
             }
         }
-        if(!hasPermission)
+        if (!hasPermission)
             throw new AccessControlError();
     }
 
     /**
      * Verifica se o token é válido e se o utilizador tem permissão para aceder ao recurso
+     *
      * @param session
      * @param res
      * @param op
@@ -291,7 +291,7 @@ public class AccessControllerClass implements AccessController {
                 UUID uuid = UUID.randomUUID();
                 cap = new Capability(username);
                 Date expire = new Date(System.currentTimeMillis() + (10 * 60 * 1000));
-                session.setAttribute(CAPABILITY+uuid, cap.makeKey(res, op, expire));
+                session.setAttribute(CAPABILITY + uuid, cap.makeKey(res, op, expire));
             } else {
                 session.removeAttribute(key);
                 throw new AccessControlError();

@@ -26,7 +26,7 @@ import java.sql.SQLException;
 @WebServlet("/followers")
 public class ManageFollowerServlet extends HttpServlet {
 
-    private static final Operation WRITE = Operation.WRITE ;
+    private static final Operation WRITE = Operation.WRITE;
     private static final Operation PUT = Operation.PUT;
 
 
@@ -45,7 +45,8 @@ public class ManageFollowerServlet extends HttpServlet {
 
     /**
      * Submit follow request.
-     * @param request The request object.
+     *
+     * @param request  The request object.
      * @param response The response object.
      */
     @Override
@@ -57,14 +58,14 @@ public class ManageFollowerServlet extends HttpServlet {
             accessController.checkPermission(request, Resource.FOLLOWERS, WRITE, account);
             int ownerPage = accessController.getOwnerPage(account);
             accessController.submitFollowRequest(ownerPage, page, account);
-            logger.authenticated("Created follow "+ ownerPage + " "+ page,  account.getUsername(), account.getUsername());
+            logger.authenticated("Created follow " + ownerPage + " " + page, account.getUsername(), account.getUsername());
             response.setStatus(HttpServletResponse.SC_OK);
             PrintWriter out = response.getWriter();
             response.setContentType("text/html");
             out.println("Follow Submitted");
-            out.println("Owner page:"+ ownerPage);
-            out.println("name:"+ account.getUsername());
-            out.println("Page:"+ page);
+            out.println("Owner page:" + ownerPage);
+            out.println("name:" + account.getUsername());
+            out.println("Page:" + page);
             out.println("<br/>");
             out.println("<a href='main_page.html'>Back</a>");
             out.close();
@@ -73,7 +74,7 @@ public class ManageFollowerServlet extends HttpServlet {
             AuthenticationError.authenticationError(response);
         } catch (IOException | SQLException e) {
             throw new RuntimeException(e);
-        } catch (RuntimeException e){
+        } catch (RuntimeException e) {
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         } catch (AccessControlError e) {
@@ -88,7 +89,8 @@ public class ManageFollowerServlet extends HttpServlet {
 
     /**
      * Update follow status.
-     * @param request The request object.
+     *
+     * @param request  The request object.
      * @param response The response object.
      */
     @Override
@@ -101,14 +103,14 @@ public class ManageFollowerServlet extends HttpServlet {
             accessController.checkPermission(request, Resource.FOLLOWERS, PUT, account);
             int ownerPage = accessController.getOwnerPage(account);
             accessController.updateFollowStatus(ownerPage, page, account);
-            logger.authenticated("Updated follow "+ ownerPage + " "+ page,  account.getUsername(), account.getUsername());
+            logger.authenticated("Updated follow " + ownerPage + " " + page, account.getUsername(), account.getUsername());
             response.setStatus(HttpServletResponse.SC_OK);
             PrintWriter out = response.getWriter();
             response.setContentType("text/html");
             out.println("Follow Updated");
-            out.println("Owner page:"+ ownerPage);
-            out.println("name:"+ account.getUsername());
-            out.println("Page:"+ page);
+            out.println("Owner page:" + ownerPage);
+            out.println("name:" + account.getUsername());
+            out.println("Page:" + page);
             out.println("<br/>");
             out.println("<a href='main_page.html'>Back</a>");
             out.close();
@@ -117,10 +119,10 @@ public class ManageFollowerServlet extends HttpServlet {
             AuthenticationError.authenticationError(response);
         } catch (IOException | SQLException e) {
             throw new RuntimeException(e);
-        } catch (RuntimeException e){
+        } catch (RuntimeException e) {
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        }  catch (AccessControlError e) {
+        } catch (AccessControlError e) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             AccessControlError.accessControllerErrorOutput(response);
         } catch (NotOwnerException e) {

@@ -1,6 +1,7 @@
 package authorization;
 
 import database.exceptions.AccessControlError;
+import database.exceptions.NoPageFound;
 import database.exceptions.NotOwnerException;
 import database.exceptions.PageNotFollowed;
 import models.*;
@@ -36,7 +37,7 @@ public interface AccessController {
 
     void updatePage(int pageId, String pageTitle, String pagePic, String email,String user, Account account) throws NotOwnerException, SQLException;
 
-    void likePost(int postId, Account account) throws SQLException, PageNotFollowed;
+    void likePost(int postId, Account account) throws SQLException, PageNotFollowed, NoPageFound;
     void unlikePost(int postId, Account account) throws SQLException, PageNotFollowed;
 
     void createPage(String username, String email, String pageTitle, String pagePic) throws SQLException;

@@ -27,7 +27,8 @@ import java.io.PrintWriter;
 public class ChangeUsersServlet extends HttpServlet {
 
     private static final String DELETE = "DELETE";
-    private static final String CANNOT_DELETE = "Cannot delete this account";
+    private static final String CANNOT_DELETE =
+            "Cannot delete this account. Account must be locked first (fail to login 3 times).";
     private static final String DELETE_PAGE = "'delete_user_page.html'";
     private static final String LOGIN_PAGE = "'index.html'";
     private static final String CHANCE_PASSWORD = "Password changed";
