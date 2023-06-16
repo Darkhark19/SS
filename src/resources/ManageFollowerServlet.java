@@ -7,11 +7,12 @@ import authenticator.LogManager;
 import authenticator.LogManagerClass;
 import authorization.AccessController;
 import authorization.AccessControllerClass;
-import database.SN;
 import database.exceptions.AccessControlError;
 import database.exceptions.AuthenticationError;
 import database.exceptions.NotOwnerException;
-import models.*;
+import models.Account;
+import models.Operation;
+import models.Resource;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -31,7 +32,6 @@ public class ManageFollowerServlet extends HttpServlet {
 
     private Authenticator authenticator;
     private LogManager logger;
-    private SN app;
 
     private AccessController accessController;
 
@@ -40,7 +40,6 @@ public class ManageFollowerServlet extends HttpServlet {
         this.authenticator = AuthenticatorClass.getAuthenticator();
         accessController = new AccessControllerClass();
         this.logger = new LogManagerClass();
-        this.app = SN.getInstance();
         super.init();
     }
 
@@ -52,13 +51,12 @@ public class ManageFollowerServlet extends HttpServlet {
     @Override
     public void doPost(HttpServletRequest request,
                        HttpServletResponse response) throws IOException {
-        int ownerPage = Integer.parseInt(request.getParameter("ownerPage"));
         int page = Integer.parseInt(request.getParameter("page"));
         try {
             Account account = authenticator.check_authenticated_request(request, response);
             accessController.checkPermission(request, Resource.FOLLOWERS, WRITE, account);
-            accessController.checkPage(page, account);
-            app.follows(ownerPage, page, FState.PENDING);
+            int ownerPage = accessController.getOwnerPage(account);
+            accessController.submitFollowRequest(ownerPage, page, account);
             logger.authenticated("Created follow "+ ownerPage + " "+ page,  account.getUsername(), account.getUsername());
             response.setStatus(HttpServletResponse.SC_OK);
             PrintWriter out = response.getWriter();
@@ -72,7 +70,7 @@ public class ManageFollowerServlet extends HttpServlet {
             out.close();
         } catch (AuthenticationError e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.sendRedirect("index.html");
+            AuthenticationError.authenticationError(response);
         } catch (IOException | SQLException e) {
             throw new RuntimeException(e);
         } catch (RuntimeException e){
@@ -80,10 +78,10 @@ public class ManageFollowerServlet extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         } catch (AccessControlError e) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.sendRedirect("main_page.html");
+            AccessControlError.accessControllerErrorOutput(response);
         } catch (NotOwnerException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.sendRedirect("main_page.html");
+            AccessControlError.accessControllerErrorOutput(response);
         }
     }
 
@@ -96,13 +94,13 @@ public class ManageFollowerServlet extends HttpServlet {
     @Override
     public void doGet(HttpServletRequest request,
                       HttpServletResponse response) throws IOException {
-        int ownerPage = Integer.parseInt(request.getParameter("ownerPage_update"));
+        //int ownerPage = Integer.parseInt(request.getParameter("ownerPage_update"));
         int page = Integer.parseInt(request.getParameter("page_update"));
         try {
             Account account = authenticator.check_authenticated_request(request, response);
             accessController.checkPermission(request, Resource.FOLLOWERS, PUT, account);
-            accessController.checkPage(ownerPage, account);
-            app.updateFollowsStatus(ownerPage, page, FState.OK);
+            int ownerPage = accessController.getOwnerPage(account);
+            accessController.updateFollowStatus(ownerPage, page, account);
             logger.authenticated("Updated follow "+ ownerPage + " "+ page,  account.getUsername(), account.getUsername());
             response.setStatus(HttpServletResponse.SC_OK);
             PrintWriter out = response.getWriter();
@@ -116,18 +114,18 @@ public class ManageFollowerServlet extends HttpServlet {
             out.close();
         } catch (AuthenticationError e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.sendRedirect("index.html");
+            AuthenticationError.authenticationError(response);
         } catch (IOException | SQLException e) {
             throw new RuntimeException(e);
         } catch (RuntimeException e){
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        } catch (AccessControlError e) {
+        }  catch (AccessControlError e) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.sendRedirect("main_page.html");
+            AccessControlError.accessControllerErrorOutput(response);
         } catch (NotOwnerException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.sendRedirect("main_page.html");
+            AccessControlError.accessControllerErrorOutput(response);
         }
     }
 

@@ -6,7 +6,6 @@ import authenticator.LogManager;
 import authenticator.LogManagerClass;
 import authorization.AccessController;
 import authorization.AccessControllerClass;
-import database.SN;
 import database.exceptions.AccessControlError;
 import database.exceptions.AuthenticationError;
 import database.exceptions.NotOwnerException;
@@ -35,17 +34,21 @@ public class PagesServlet extends HttpServlet {
     private LogManager logger;
 
     private AccessController accessController;
-    private SN app;
 
     @Override
     public void init() throws ServletException {
         this.authenticator = AuthenticatorClass.getAuthenticator();
         accessController = new AccessControllerClass();
         this.logger = new LogManagerClass();
-        app = SN.getInstance();
         super.init();
     }
 
+    /**
+     * Update Page naoe usado
+     * @param request
+     * @param response
+     * @throws IOException
+     */
     @Override
     public void doPost(HttpServletRequest request,
                        HttpServletResponse response) throws IOException {
@@ -69,7 +72,7 @@ public class PagesServlet extends HttpServlet {
             out.close();
         } catch (AuthenticationError e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.sendRedirect("index.html");
+            AuthenticationError.authenticationError(response);
         } catch (IOException | SQLException e) {
             throw new RuntimeException(e);
         } catch (RuntimeException e) {
@@ -77,7 +80,7 @@ public class PagesServlet extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         } catch (AccessControlError | NotOwnerException e) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.sendRedirect("main_page.html");
+            AccessControlError.accessControllerErrorOutput(response);
         }
     }
 
@@ -87,8 +90,8 @@ public class PagesServlet extends HttpServlet {
         try {
             Account account = authenticator.check_authenticated_request(request, response);
             accessController.checkPermission(request, Resource.PAGES, GET, account);
-            List<PageObject> pages = app.getAllPages();;
             logger.authenticated("Get pages ", account.getUsername(), account.getUsername());
+            List<PageObject> pages = accessController.getPages();
             response.setStatus(HttpServletResponse.SC_OK);
             PrintWriter out = response.getWriter();
             response.setContentType("text/html");
@@ -102,7 +105,7 @@ public class PagesServlet extends HttpServlet {
             out.close();
         } catch (AuthenticationError e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.sendRedirect("index.html");
+            AuthenticationError.authenticationError(response);
         } catch (IOException | SQLException e) {
             throw new RuntimeException(e);
         } catch (RuntimeException e) {
@@ -110,7 +113,7 @@ public class PagesServlet extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         } catch (AccessControlError e) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.sendRedirect("main_page.html");
+            AccessControlError.accessControllerErrorOutput(response);
         }
     }
 }

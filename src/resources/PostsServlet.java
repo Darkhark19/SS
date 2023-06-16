@@ -28,7 +28,7 @@ import java.util.List;
 @WebServlet("/posts")
 public class PostsServlet extends HttpServlet {
 
-    private static final Operation UPDATE = Operation.PUT;
+    private static final Operation CREATE = Operation.WRITE;
     private static final Operation GET = Operation.READ;
     private Authenticator authenticator;
     private LogManager logger;
@@ -43,28 +43,34 @@ public class PostsServlet extends HttpServlet {
         super.init();
     }
 
+    /**
+     * Não usado
+     * @param request
+     * @param response
+     * @throws IOException
+     */
     @Override
     public void doPost(HttpServletRequest request,
                        HttpServletResponse response) throws IOException {
         int postId = Integer.parseInt(request.getParameter("postId"));
-        String post_text = request.getParameter("post_text");
+        String postText = request.getParameter("post_text");
         try {
             Account account = authenticator.check_authenticated_request(request, response);
-            accessController.checkPermission(request, Resource.POSTS, UPDATE, account);
-            accessController.updatePost(postId, post_text, account);
+            accessController.checkPermission(request, Resource.POSTS, CREATE, account);
+            accessController.updatePost(postId, postText, account);
             logger.authenticated("Update post: " + postId, account.getUsername(), account.getUsername());
             response.setStatus(HttpServletResponse.SC_OK);
             PrintWriter out = response.getWriter();
             response.setContentType("text/html");
             out.println("Post id:" + postId);
-            out.println("Post text:" + post_text);
+            out.println("Post text:" + postText);
             out.println("name:" + account.getUsername());
             out.println("<br/>");
             out.println("<a href='main_page.html'>Back</a>");
             out.close();
         } catch (AuthenticationError e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.sendRedirect("index.html");
+            AuthenticationError.authenticationError(response);
         } catch (IOException | SQLException e) {
             throw new RuntimeException(e);
         } catch (RuntimeException e) {
@@ -72,7 +78,7 @@ public class PostsServlet extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         } catch (AccessControlError | NotOwnerException e) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.sendRedirect("main_page.html");
+            AccessControlError.accessControllerErrorOutput(response);
         }
     }
 
@@ -98,17 +104,24 @@ public class PostsServlet extends HttpServlet {
             out.println("<a href='main_page.html'>Back</a>");
             out.close();
         } catch (AuthenticationError e) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.sendRedirect("index.html");
+            AuthenticationError.authenticationError(response);
         } catch (IOException | SQLException e) {
             throw new RuntimeException(e);
         } catch (RuntimeException e) {
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        } catch (AccessControlError | PageNotFollowed e) {
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.sendRedirect("main_page.html");
+        } catch (AccessControlError e) {
+            AccessControlError.accessControllerErrorOutput(response);
+        } catch (PageNotFollowed e) {
+            PrintWriter out = response.getWriter();
+            response.setContentType("text/html");
+            out.println("Page:" + pageId + " not followed");
+            out.println("<a href='main_page.html'>Back</a>");
+            out.close();
         }
     }
+
+
+
 
 }

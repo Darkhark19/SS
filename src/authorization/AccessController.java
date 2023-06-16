@@ -29,7 +29,6 @@ public interface AccessController {
 
     PageObject checkPage(int page, Account acc) throws  SQLException, NotOwnerException;
 
-    PostObject checkPost(int post, Account acc) throws SQLException, NotOwnerException;
 
     List<PostObject> checkPagePosts(int page, Account acc) throws SQLException, PageNotFollowed;
 
@@ -40,5 +39,18 @@ public interface AccessController {
     void likePost(int postId, Account account) throws SQLException, PageNotFollowed;
     void unlikePost(int postId, Account account) throws SQLException, PageNotFollowed;
 
+    void createPage(String username, String email, String pageTitle, String pagePic) throws SQLException;
 
+    PageObject deletePage(int pageId) throws SQLException;
+
+    PostObject newPost(int pageId, String date, String text, Account account) throws NotOwnerException, SQLException;
+
+    List<PageObject> getPages() throws SQLException;// = app.getAllPages();
+
+    PostObject deletePost(int postId,Account account) throws SQLException, NotOwnerException;
+    void updateFollowStatus(int ownerPage, int followerPage, Account account) throws SQLException, NotOwnerException;
+
+    void submitFollowRequest(int ownerPage, int followerPage,Account account) throws NotOwnerException, SQLException;
+
+    int getOwnerPage(Account account) throws SQLException;
 }

@@ -31,7 +31,7 @@ public class Capability  {
     public boolean checkPermission(Resource resource, Operation op, String username) throws TimeExpiredTokenError {
         if(!this.username.equals(username))
             return false;
-        else if ( expireTime.after(new Date()))
+        else if ( !expireTime.after(new Date()))
             throw new TimeExpiredTokenError();
         return this.resource.equals(resource) && this.operation.equals(op);
     }

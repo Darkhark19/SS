@@ -53,7 +53,7 @@ public class ManageRolesServlet extends HttpServlet {
             out.close();
         } catch (AuthenticationError e) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.sendRedirect("index.html");
+            AuthenticationError.authenticationError(response);
         }
     }
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -73,7 +73,7 @@ public class ManageRolesServlet extends HttpServlet {
             out.close();
         } catch (AuthenticationError e) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.sendRedirect("index.html");
+            AuthenticationError.authenticationError(response);
         }
     }
 

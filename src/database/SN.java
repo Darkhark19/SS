@@ -1,21 +1,16 @@
 package database;
 
+import models.Account;
 import models.FState;
 import models.PageObject;
 import models.PostObject;
 
-import java.io.File;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import static authenticator.AuthenticatorClass.LOCAL_PATH;
-
 
 public class SN {
-
-	private static final String DB_URL = "jdbc:sqlite:";
-	private static final String dburl = DB_URL+LOCAL_PATH + File.separator +"database.db";
 
     private static Connection theconnection = null;
 
@@ -23,7 +18,7 @@ public class SN {
 
     void connect() throws Exception {
         if (theconnection == null)
-            theconnection = DriverManager.getConnection(dburl);
+            theconnection = DatabaseManager.getInstance().getConnection();
     }
 
     static SN theapp = null;
@@ -303,10 +298,16 @@ public class SN {
         return FState.NONE;
     }
 
+    /**
+     * Encontra
+     * @param page_id
+     * @return
+     * @throws SQLException
+     */
     public List<PageObject> getFollowers(int page_id) throws SQLException {
         List<PageObject> lpages = new ArrayList<PageObject>();
         Statement stmtl = theconnection.createStatement();
-        ResultSet rs = stmtl.executeQuery("select page_ids from follower where status='OK' and page_ids=" + page_id);
+        ResultSet rs = stmtl.executeQuery("select page_ids from follower where status='OK' and page_idd=" + page_id);
         while (rs.next()) {
             PageObject p = getPage(rs.getInt("page_ids"));
             lpages.add(p);
@@ -314,6 +315,12 @@ public class SN {
         return lpages;
     }
 
+    /**
+     * Encontra as paginas que a pagina com id segue
+     * @param page_id
+     * @return
+     * @throws SQLException
+     */
     public List<PageObject> getFollowed(int page_id) throws SQLException {
         List<PageObject> lpages = new ArrayList<PageObject>();
         Statement stmtl = theconnection.createStatement();
@@ -323,6 +330,17 @@ public class SN {
             lpages.add(p);
         }
         return lpages;
+    }
+
+    public PageObject getOwnerPage(Account owner) throws SQLException {
+        String sql = "select page_id from page where user_id=?";
+        PreparedStatement pstmt = theconnection.prepareStatement(sql);
+        pstmt.setString(1, owner.getUsername());
+        ResultSet rs = pstmt.executeQuery();
+        if(rs.next()) {
+            return getPage(rs.getInt("page_id"));
+        }
+        return null;
     }
 
 

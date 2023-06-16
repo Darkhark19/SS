@@ -192,9 +192,9 @@ public class DatabaseOperator {
         ResultSet rs = pstmt.executeQuery();
         Map<Resource,List<Operation>> permissions = new HashMap<>();
         while(rs.next()){
+            Resource res = Resource.getResource(rs.getString("resource"));
             Operation op =Operation.getOperation(rs.getString("operation"));
-            String  resource = rs.getString("resource");
-            Resource res = Resource.getResource(resource);
+
             List<Operation> ops = permissions.get(res);
             if(ops == null){
                 ops = new LinkedList<>();
@@ -241,18 +241,15 @@ public class DatabaseOperator {
         db.createPermission(user,Resource.PAGES,Operation.READ);
         db.createPermission(user,Resource.PAGES,Operation.PUT);
         db.createPermission(user,Resource.FOLLOWERS,Operation.WRITE);
-        db.createPermission(user,Resource.FOLLOWERS,Operation.PUT);
-        db.createPermission(user, Resource.MANAGE_POSTS, Operation.WRITE);
-        db.createPermission(user,Resource.MANAGE_POSTS,Operation.DELETE);
-        db.createPermission(user,Resource.POSTS,Operation.READ);
-        db.createPermission(user,Resource.POSTS,Operation.PUT);
-        db.createPermission(user,Resource.LIKES,Operation.LIKE);
-        db.createPermission(user,Resource.LIKES,Operation.UNLIKE);*/
-
-
+            db.createPermission(user,Resource.FOLLOWERS,Operation.PUT);
+            db.createPermission(user, Resource.MANAGE_POSTS, Operation.WRITE);
+            db.createPermission(user,Resource.MANAGE_POSTS,Operation.DELETE);
+            db.createPermission(user,Resource.POSTS,Operation.READ);
+            db.createPermission(user,Resource.LIKES,Operation.LIKE);
+            db.createPermission(user,Resource.LIKES,Operation.UNLIKE);*/
+        //SN.getInstance().newPage("root", "admin@admin.pt", "root", "root");
+        //SN.getInstance().deletePage( SN.getInstance().getPage(5));
     }
-
-
 
 }
 

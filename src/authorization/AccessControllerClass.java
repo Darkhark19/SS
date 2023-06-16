@@ -19,6 +19,8 @@ public class AccessControllerClass implements AccessController {
     private static final String CAPABILITY = "capability";
     private final DatabaseOperator db;
 
+    private static final SN app = SN.getInstance();
+
     public AccessControllerClass() {
         this.db = new DatabaseOperator();
     }
@@ -67,24 +69,24 @@ public class AccessControllerClass implements AccessController {
 
     @Override
     public PageObject checkPage(int page, Account acc) throws NotOwnerException, SQLException {
-        PageObject p = SN.getInstance().getPage(page);
+        PageObject p = app.getPage(page);
         if (!p.getUserId().equals(acc.getUsername()))
             throw new NotOwnerException();
         return p;
     }
 
     public PostObject checkPost(int post, Account acc) throws NotOwnerException, SQLException {
-        PostObject p = SN.getInstance().getPost(post);
+        PostObject p = app.getPost(post);
         checkPage(p.getPageId(), acc);
         return p;
     }
 
     @Override
     public List<PostObject> checkPagePosts(int page, Account acc) throws SQLException, PageNotFollowed {
-        List<PageObject> pages = SN.getInstance().getFollowers(page);
+        List<PageObject> pages = app.getFollowers(page);
         for (PageObject p : pages) {
             if (p.getUserId().equals(acc.getUsername()))
-                return SN.getInstance().getPagePosts(page);
+                return app.getPagePosts(page);
         }
         throw new PageNotFollowed();
 
@@ -94,7 +96,7 @@ public class AccessControllerClass implements AccessController {
     public void updatePost(int postId, String post_text, Account account) throws NotOwnerException, SQLException {
         PostObject p = checkPost(postId, account);
         p.setPostText(post_text);
-        SN.getInstance().updatePost(p);
+        app.updatePost(p);
 
     }
 
@@ -109,16 +111,16 @@ public class AccessControllerClass implements AccessController {
             p.setEmail(email);
         if (user != null)
             p.setUserId(user);
-        SN.getInstance().updatePage(p);
+        app.updatePage(p);
     }
 
     @Override
     public void likePost(int postId, Account account) throws SQLException, PageNotFollowed {
-        SN app = SN.getInstance();
+        PageObject ownerPage = app.getOwnerPage(account);
         PostObject post = app.getPost(postId);
-        List<PageObject> followers = app.getFollowers(post.getPageId());
+        List<PageObject> followers = app.getFollowed(ownerPage.getPageId());
         for (PageObject p : followers) {
-            if (p.getUserId().equals(account.getUsername())) {
+            if (p.getPageId() == post.getPageId()){
                 app.like(postId, post.getPageId());
                 return;
             }
@@ -128,7 +130,6 @@ public class AccessControllerClass implements AccessController {
 
     @Override
     public void unlikePost(int postId, Account account) throws SQLException, PageNotFollowed {
-        SN app = SN.getInstance();
         PostObject post = app.getPost(postId);
         List<PageObject> followers = app.getFollowers(post.getPageId());
         for (PageObject p : followers) {
@@ -141,6 +142,53 @@ public class AccessControllerClass implements AccessController {
 
     }
 
+    @Override
+    public void createPage(String username, String email, String pageTitle, String pagePic) throws SQLException {
+        app.newPage(username,email,pageTitle,pagePic);
+
+    }
+
+    @Override
+    public PageObject deletePage(int pageId) throws SQLException {
+        PageObject page = app.getPage(pageId);
+        app.deletePage( page);
+        return page;
+    }
+
+    @Override
+    public PostObject newPost(int pageId, String date, String text, Account account) throws NotOwnerException, SQLException {
+        this.checkPage(pageId, account);
+        return app.newPost(pageId,date,text);
+    }
+
+    @Override
+    public List<PageObject> getPages() throws SQLException {
+         return app.getAllPages();
+    }
+
+    @Override
+    public PostObject deletePost(int postId,Account account) throws NotOwnerException, SQLException {
+        PostObject p = this.checkPost(postId, account);
+        app.deletePost( p);
+        return p;
+    }
+
+    @Override
+    public void updateFollowStatus(int ownerPage, int followerPage, Account account) throws SQLException, NotOwnerException {
+        checkPage(ownerPage, account);
+        app.updateFollowsStatus(ownerPage, followerPage, FState.OK);
+    }
+
+    @Override
+    public void submitFollowRequest(int ownerPage, int followerPage, Account account) throws NotOwnerException, SQLException {
+        this.checkPage(ownerPage, account);
+        app.follows(ownerPage, followerPage, FState.PENDING);
+    }
+
+    @Override
+    public int getOwnerPage(Account account) throws SQLException {
+        return app.getOwnerPage(account).getPageId();
+    }
 
     @Override
     public void grantPermission(Role role, Resource res, Operation op) {
@@ -180,9 +228,8 @@ public class AccessControllerClass implements AccessController {
             List<Capability> result = new ArrayList<>();
 
             for (Map.Entry<Resource, Set<Operation>> e : resultMap.entrySet()) {
-                Capability cap = new Capability(user.getUsername());
                 Date expire = new Date(System.currentTimeMillis() + (10 * 60 * 1000));
-                e.getValue().forEach(value -> result.add(cap.makeKey(e.getKey(), value, expire)));
+                e.getValue().forEach(value -> result.add(new Capability(user.getUsername()).makeKey(e.getKey(), value, expire)));
             }
             return result;
         } catch (SQLException e) {
@@ -196,19 +243,24 @@ public class AccessControllerClass implements AccessController {
         if (acc == null)
             throw new AccessControlError();
         Enumeration<String> keys = session.getAttributeNames();
+        boolean hasPermission = false;
         while (keys.hasMoreElements()) {
             String key = keys.nextElement();
             if (key.contains(CAPABILITY)) {
                 //se token null ou se check permission retornar false
                 //ir a base de dados buscar permissoes pedidas do user
                 try {
-                    this.checkCapabilityToken(session, res, op, key, acc.getUsername());
+                    if(this.checkCapabilityToken(session, res, op, key, acc.getUsername())) {
+                        hasPermission = true;
+                        break;
+                    }
                 } catch (SQLException e) {
                     throw new RuntimeException(e);
                 }
             }
         }
-        throw new AccessControlError();
+        if(!hasPermission)
+            throw new AccessControlError();
     }
 
     /**
@@ -221,7 +273,7 @@ public class AccessControllerClass implements AccessController {
      * @throws SQLException
      * @throws AccessControlError
      */
-    private void checkCapabilityToken(HttpSession session, Resource res, Operation op, String key, String username) throws SQLException, AccessControlError {
+    private boolean checkCapabilityToken(HttpSession session, Resource res, Operation op, String key, String username) throws SQLException, AccessControlError {
         String token = session.getAttribute(key).toString();
         Capability cap = JWTUtils.parseCapabilityJWT(token, session.getId(), username);
         boolean isValid = true;
@@ -229,7 +281,7 @@ public class AccessControllerClass implements AccessController {
             if (cap == null) {
                 isValid = false;
             } else if (cap.checkPermission(res, op, username))
-                return;
+                return true;
         } catch (TimeExpiredTokenError e) {
             isValid = false;
         }
@@ -245,6 +297,7 @@ public class AccessControllerClass implements AccessController {
                 throw new AccessControlError();
             }
         }
+        return false;
     }
 
 }

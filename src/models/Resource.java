@@ -8,7 +8,7 @@ public enum Resource {
     ROLES("roles"),
     PAGES("pages"),
     MANAGE_PAGE("manage_page"),
-    MANAGE_POSTS("manage_post"),
+    MANAGE_POST("manage_post"),
     POSTS("posts"),
     FOLLOWERS("followers"),
     LIKES("likes"),

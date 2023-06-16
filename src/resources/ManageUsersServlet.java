@@ -83,7 +83,7 @@ public class ManageUsersServlet extends HttpServlet {
 
 
     /**
-     * Get an account.
+     * Get an account. Nao usado
      * @param request The request object.
      * @param response The response object.
      */
@@ -120,12 +120,13 @@ public class ManageUsersServlet extends HttpServlet {
         } catch (AuthenticationError e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             logger.authenticated(GET+" Error", name, "Unknown");
-            response.sendRedirect("main_page.html");
+            AuthenticationError.authenticationError(response);
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (AccessControlError e) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.sendRedirect("main_page.html");
+            logger.authenticated("GET AccessControlError", name, "Unknown");
+            AccessControlError.accessControllerErrorOutput(response);
         }
     }
 

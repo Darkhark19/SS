@@ -7,8 +7,8 @@ import authenticator.LogManager;
 import authenticator.LogManagerClass;
 import authorization.AccessController;
 import authorization.AccessControllerClass;
-import database.SN;
-import database.exceptions.*;
+import database.exceptions.AccessControlError;
+import database.exceptions.AuthenticationError;
 import models.Account;
 import models.Operation;
 import models.PageObject;
@@ -27,12 +27,10 @@ import java.sql.SQLException;
 public class ManagePageServlet extends HttpServlet {
 
     private static final Operation DELETE = Operation.DELETE;
-    private static final Operation CREATE = Operation.WRITE;
 
 
     private Authenticator authenticator;
     private LogManager logger;
-    private SN app;
 
     private AccessController accessController;
 
@@ -41,7 +39,6 @@ public class ManagePageServlet extends HttpServlet {
         this.authenticator = AuthenticatorClass.getAuthenticator();
         accessController = new AccessControllerClass();
         this.logger = new LogManagerClass();
-        this.app = SN.getInstance();
         super.init();
     }
 
@@ -59,8 +56,8 @@ public class ManagePageServlet extends HttpServlet {
         String page_pic = request.getParameter("page_pic");
         try {
             Account account = authenticator.check_authenticated_request(request, response);
-            accessController.checkPermission(request,Resource.PAGES , CREATE, account);
-            app.newPage(name,email,page_title,page_pic);
+            accessController.checkPermission(request,Resource.MANAGE_PAGE ,  Operation.WRITE, account);
+            accessController.createPage(name, email, page_title, page_pic);
             logger.authenticated("Created page", name, account.getUsername());
             response.setStatus(HttpServletResponse.SC_CREATED);
             PrintWriter out = response.getWriter();
@@ -73,7 +70,7 @@ public class ManagePageServlet extends HttpServlet {
             out.close();
         } catch (AuthenticationError e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.sendRedirect("index.html");
+            AuthenticationError.authenticationError(response);
         } catch (IOException | SQLException e) {
             throw new RuntimeException(e);
         } catch (RuntimeException e){
@@ -81,7 +78,7 @@ public class ManagePageServlet extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         } catch (AccessControlError e) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.sendRedirect("main_page.html");
+            AccessControlError.accessControllerErrorOutput(response);
         }
     }
 
@@ -97,9 +94,8 @@ public class ManagePageServlet extends HttpServlet {
         int page_id = Integer.parseInt(request.getParameter("page_id"));
         try {
             Account account = authenticator.check_authenticated_request(request, response);
-            accessController.checkPermission(request,Resource.PAGES , DELETE, account);
-            PageObject page = app.getPage(page_id);
-            app.deletePage( page);
+            accessController.checkPermission(request,Resource.MANAGE_PAGE , DELETE, account);
+            PageObject page = accessController.deletePage(page_id);
             logger.authenticated("Delete page", page.getUserId(), account.getUsername());
             response.setStatus(HttpServletResponse.SC_OK);
             PrintWriter out = response.getWriter();
@@ -112,7 +108,7 @@ public class ManagePageServlet extends HttpServlet {
             out.close();
         } catch (AuthenticationError e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.sendRedirect("index.html");
+            AuthenticationError.authenticationError(response);
         } catch (IOException | SQLException e) {
             throw new RuntimeException(e);
         } catch (RuntimeException e){
@@ -120,7 +116,7 @@ public class ManagePageServlet extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         } catch (AccessControlError e) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.sendRedirect("main_page.html");
+            AccessControlError.accessControllerErrorOutput(response);
         }
     }
 

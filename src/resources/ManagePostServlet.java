@@ -7,11 +7,13 @@ import authenticator.LogManager;
 import authenticator.LogManagerClass;
 import authorization.AccessController;
 import authorization.AccessControllerClass;
-import database.SN;
 import database.exceptions.AccessControlError;
 import database.exceptions.AuthenticationError;
 import database.exceptions.NotOwnerException;
-import models.*;
+import models.Account;
+import models.Operation;
+import models.PostObject;
+import models.Resource;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -31,7 +33,6 @@ public class ManagePostServlet extends HttpServlet {
 
     private Authenticator authenticator;
     private LogManager logger;
-    private SN app;
 
     private AccessController accessController;
 
@@ -40,7 +41,6 @@ public class ManagePostServlet extends HttpServlet {
         this.authenticator = AuthenticatorClass.getAuthenticator();
         accessController = new AccessControllerClass();
         this.logger = new LogManagerClass();
-        this.app = SN.getInstance();
         super.init();
     }
 
@@ -52,14 +52,13 @@ public class ManagePostServlet extends HttpServlet {
     @Override
     public void doPost(HttpServletRequest request,
                        HttpServletResponse response) throws IOException {
-        int pageId = Integer.parseInt(request.getParameter("pageId"));
+        int pageId = Integer.parseInt(request.getParameter("page_Id"));
         String date = request.getParameter("date");
         String text = request.getParameter("text");
         try {
             Account account = authenticator.check_authenticated_request(request, response);
-            accessController.checkPermission(request, Resource.MANAGE_POSTS, WRITE, account);
-            accessController.checkPage(pageId, account);
-            PostObject post = app.newPost(pageId,date,text);
+            accessController.checkPermission(request, Resource.MANAGE_POST, WRITE, account);
+            PostObject post = accessController.newPost(pageId, date, text,account);
             logger.authenticated("Created post ",  account.getUsername(), account.getUsername());
             response.setStatus(HttpServletResponse.SC_CREATED);
             PrintWriter out = response.getWriter();
@@ -72,7 +71,7 @@ public class ManagePostServlet extends HttpServlet {
             out.close();
         } catch (AuthenticationError e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.sendRedirect("index.html");
+            AuthenticationError.authenticationError(response);
         } catch (IOException | SQLException e) {
             throw new RuntimeException(e);
         } catch (RuntimeException e){
@@ -80,7 +79,7 @@ public class ManagePostServlet extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         } catch (AccessControlError | NotOwnerException e) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.sendRedirect("main_page.html");
+            AccessControlError.accessControllerErrorOutput(response);
         }
     }
 
@@ -93,12 +92,11 @@ public class ManagePostServlet extends HttpServlet {
     @Override
     public void doGet(HttpServletRequest request,
                       HttpServletResponse response) throws IOException {
-        int postId = Integer.parseInt(request.getParameter("postId"));
+        int postId = Integer.parseInt(request.getParameter("post"));
         try {
             Account account = authenticator.check_authenticated_request(request, response);
-            accessController.checkPermission(request,Resource.PAGES , DELETE, account);
-            PostObject p = accessController.checkPost(postId, account);
-            app.deletePost( p);
+            accessController.checkPermission(request,Resource.MANAGE_POST , DELETE, account);
+            PostObject p = accessController.deletePost(postId,account);
             logger.authenticated("Delete post: "+ p.getPostId(),account.getUsername() , account.getUsername());
             response.setStatus(HttpServletResponse.SC_OK);
             PrintWriter out = response.getWriter();
@@ -112,7 +110,7 @@ public class ManagePostServlet extends HttpServlet {
             out.close();
         } catch (AuthenticationError e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.sendRedirect("index.html");
+            AuthenticationError.authenticationError(response);
         } catch (IOException | SQLException e) {
             throw new RuntimeException(e);
         } catch (RuntimeException e){
@@ -120,7 +118,7 @@ public class ManagePostServlet extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         } catch (AccessControlError | NotOwnerException e) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.sendRedirect("main_page.html");
+            AccessControlError.accessControllerErrorOutput(response);
         }
     }
 
