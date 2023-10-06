@@ -1,8 +1,8 @@
 # Software Security project
-Academic project for Software Security class.
+Academic project for Software Security class. Implementation of access control security feature.
 ## Authors
-* Diogo Ye 56726
-* Tiago Vieira 57719
+* Diogo Ye 
+* Tiago Vieira 
 
 ## Run instructions:
 1. Change the `LOCAL_PATH` constant in the `src/authenticator/AuthenticatorClass.java` to the **absolute path** of the directory where you cloned the project.
